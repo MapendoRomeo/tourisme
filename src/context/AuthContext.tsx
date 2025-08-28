@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('token', res.data.token);
 
       // Redirection selon le rôle
-      if (!res.data?.isAdmin) {
+      if (res.data?.isAdmin) {
         window.location.href = "/admin";
       } else {
         window.location.href = "/";

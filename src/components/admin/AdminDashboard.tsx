@@ -169,7 +169,7 @@ const AdminDashboard = () => {
             </div>
             <Button onClick={handleLogout} variant="outline" className="flex items-center gap-2">
               <LogOut className="w-4 h-4" />
-              Déconnexion
+              Voir le site
             </Button>
           </div>
         </div>
