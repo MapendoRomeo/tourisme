@@ -1,0 +1,164 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap');
+
+/* Design system definition with tourism-inspired colors */
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 203 89% 53%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.75rem;
+
+    /* Tourism color palette */
+    --ocean-50: 199 89% 95%;
+    --ocean-100: 201 85% 88%;
+    --ocean-500: 203 89% 53%;
+    --ocean-600: 205 87% 45%;
+    --ocean-900: 207 85% 25%;
+
+    --sunset-50: 33 100% 95%;
+    --sunset-100: 34 100% 88%;
+    --sunset-500: 25 95% 63%;
+    --sunset-600: 21 90% 55%;
+    --sunset-700: 19 87% 48%;
+    --sunset-900: 15 85% 35%;
+
+    --nature-50: 142 76% 95%;
+    --nature-100: 141 84% 88%;
+    --nature-500: 142 71% 45%;
+    --nature-600: 142 69% 38%;
+    --nature-900: 142 85% 18%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-ocean-500 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-ocean-600;
+  }
+}
+
+@layer components {
+  /* Hero section styles */
+  .hero-section {
+    @apply min-h-screen bg-gradient-hero relative overflow-hidden;
+  }
+
+  .hero-content {
+    @apply relative z-10 flex flex-col items-center justify-center min-h-screen text-center px-4;
+  }
+
+  .hero-title {
+    @apply font-display text-5xl md:text-7xl font-bold text-white mb-6 animate-fade-up;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  .hero-subtitle {
+    @apply font-script text-xl md:text-2xl text-white/90 mb-8 animate-fade-up;
+    animation-delay: 0.2s;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  }
+
+  /* Card styles */
+  .attraction-card {
+    @apply bg-card rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer;
+  }
+
+  .attraction-card:hover {
+    @apply transform -translate-y-2;
+  }
+
+  .attraction-image {
+    @apply w-full h-64 object-cover transition-transform duration-700;
+  }
+
+  .group:hover .attraction-image {
+    @apply scale-110;
+  }
+
+  /* Button variants */
+  .btn-hero {
+    @apply bg-white text-ocean-600 hover:bg-white/90 font-semibold px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 animate-fade-up;
+    animation-delay: 0.4s;
+  }
+
+  .btn-cta {
+    @apply bg-gradient-to-r from-sunset-500 to-sunset-600 hover:from-sunset-600 hover:to-sunset-700 text-white font-semibold px-6 py-3 rounded-full shadow-md hover:shadow-lg transition-all duration-300;
+  }
+
+  /* Navigation styles */
+  .nav-link {
+    @apply text-white/80 hover:text-white font-medium transition-colors duration-200 relative;
+  }
+
+  .nav-link::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300;
+  }
+
+  .nav-link:hover::after {
+    @apply w-full;
+  }
+
+  /* Section styles */
+  .section-padding {
+    @apply py-16 md:py-24;
+  }
+
+  .section-title {
+    @apply font-display text-3xl md:text-4xl font-bold text-center mb-4;
+  }
+
+  .section-subtitle {
+    @apply font-script text-lg md:text-xl text-muted-foreground text-center mb-12;
+  }
+}
