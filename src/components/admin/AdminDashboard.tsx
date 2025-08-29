@@ -240,10 +240,7 @@ const AdminDashboard = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${user.isAdmin ? 'bg-ocean-100 text-ocean-800' : 'bg-green-100 text-green-800'}`}>{user.isAdmin ? 'Admin' : 'Utilisateur'}</span>
-                          {user.isSuperAdmin && (
-                            <span className="px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-800">SuperAdmin</span>
-                          )}
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${user.isAdmin ? 'bg-ocean-100 text-ocean-800' : user.isSuperAdmin ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'}`}>{user.isAdmin ? 'Admin' : user.isSuperAdmin ? 'SuperAdmin' : 'Utilisateur'}</span>
                           <span className="text-sm text-muted-foreground">Actif</span>
                           {/* Bouton d'assignation visible uniquement pour le superAdmin */}
                           {currentUser.isSuperAdmin && !user.isSuperAdmin && (
