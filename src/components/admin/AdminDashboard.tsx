@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import AdminStats from "./AdminStats";
 import ReviewsManagement from "./ReviewsManagement";
 import BookingsManagement from "./BookingsManagement";
-import AttractionsSection from "../AttractionsSection";
+import { useAuth } from "@/context/AuthContext";
 
 interface AdminStats {
   users: number;
@@ -42,10 +42,11 @@ interface AdminBooking {
 }
 
 interface AdminUser {
-  id: number;
-  name: string;
+  id: string;
+  name?: string;
   email: string;
   isAdmin?: boolean;
+  isSuperAdmin?: boolean;
 }
 interface Attraction {
   reviewsCount: number;
@@ -60,8 +61,8 @@ const AdminDashboard = () => {
   const [bookings, setBookings] = useState<AdminBooking[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [attractionss, setAttractionss] = useState<Attraction[]>([]);
-  const [loading, setLoading] = useState(true);
   const [enabled, setEnabled] = useState(false);
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -82,18 +83,15 @@ const AdminDashboard = () => {
         setEnabled(autoApp.data.autoApproveReviews);
       } catch {
         toast({ title: "Erreur", description: "Impossible de charger les données administrateur.", variant: "destructive" });
-      } finally {
-        setLoading(false);
       }
     };
     fetchAll();
   }, []);
 
   const handleLogout = () => {
-    console.log("Déconnexion admin");
     toast({
-      title: "Déconnexion",
-      description: "Vous avez été déconnecté avec succès.",
+      title: "Site",
+      description: "Vous etes rediriger vers le site",
     });
     // Simulate logout
     window.location.href = '/';
@@ -154,6 +152,9 @@ const AdminDashboard = () => {
       toast({ title: "Erreur", description: "Impossible update config", variant: "destructive" });
     }
   }
+
+
+  const currentUser: AdminUser = user;
 
   return (
     <div className="min-h-screen bg-gradient-card">
@@ -227,7 +228,7 @@ const AdminDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {users.map((user: any) => (
+                    {users.map((user: AdminUser) => (
                       <div key={user.id} className="flex items-center justify-between p-4 border rounded">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-ocean-500 rounded-full flex items-center justify-center text-white font-semibold">
@@ -240,7 +241,69 @@ const AdminDashboard = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className={`px-2 py-1 rounded text-xs font-medium ${user.isAdmin ? 'bg-ocean-100 text-ocean-800' : 'bg-green-100 text-green-800'}`}>{user.isAdmin ? 'Admin' : 'Utilisateur'}</span>
+                          {user.isSuperAdmin && (
+                            <span className="px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-800">SuperAdmin</span>
+                          )}
                           <span className="text-sm text-muted-foreground">Actif</span>
+                          {/* Bouton d'assignation visible uniquement pour le superAdmin */}
+                          {currentUser.isSuperAdmin && !user.isSuperAdmin && (
+                            <>
+                              {!user.isAdmin && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={async () => {
+                                    try {
+                                      await axios.patch(`/users/${user.id}/role`, { role: "admin" });
+                                      const res = await axios.get("/users");
+                                      setUsers(res.data);
+                                      toast({ title: "Rôle attribué", description: "L'utilisateur est maintenant admin." });
+                                    } catch {
+                                      toast({ title: "Erreur", description: "Impossible d'attribuer le rôle.", variant: "destructive" });
+                                    }
+                                  }}
+                                >
+                                  Assigner Admin
+                                </Button>
+                              )}
+                              {!user.isSuperAdmin && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={async () => {
+                                    try {
+                                      await axios.patch(`/users/${user.id}/role`, { role: "superAdmin" });
+                                      const res = await axios.get("/users");
+                                      setUsers(res.data);
+                                      toast({ title: "Rôle attribué", description: "L'utilisateur est maintenant superAdmin." });
+                                    } catch {
+                                      toast({ title: "Erreur", description: "Impossible d'attribuer le rôle.", variant: "destructive" });
+                                    }
+                                  }}
+                                >
+                                  Assigner SuperAdmin
+                                </Button>
+                              )}
+                              {(user.isAdmin || user.isSuperAdmin) && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={async () => {
+                                    try {
+                                      await axios.patch(`/users/${user.id}/role`, { role: "user" });
+                                      const res = await axios.get("/users");
+                                      setUsers(res.data);
+                                      toast({ title: "Rôle attribué", description: "L'utilisateur est maintenant utilisateur." });
+                                    } catch {
+                                      toast({ title: "Erreur", description: "Impossible d'attribuer le rôle.", variant: "destructive" });
+                                    }
+                                  }}
+                                >
+                                  Assigner Utilisateur
+                                </Button>
+                              )}
+                            </>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -333,3 +396,5 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+
+

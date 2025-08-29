@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import axios from "@/api/axios";
 
+
 interface User {
   id: string;
   email: string;
@@ -53,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('token', res.data.token);
 
       // Redirection selon le rôle
-      if (res.data?.isAdmin) {
+      if (res.data?.isAdmin || res.data?.isSuperAdmin) {
         window.location.href = "/admin";
       } else {
         window.location.href = "/";
