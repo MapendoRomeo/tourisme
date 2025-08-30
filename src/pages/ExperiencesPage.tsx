@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sailboat, Camera, Wine, Utensils, Filter, Search, ArrowLeft, Users, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { Link } from "react-router-dom";
 import QuickLoginModal from "@/components/auth/QuickLoginModal";
 
