@@ -8,7 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  const { isAuthenticated, loading, logout } = useAuth();
+  const { isAuthenticated, user, loading, logout } = useAuth();
 
   const navItems = [
     { label: "Accueil", href: "/" },
@@ -67,6 +67,14 @@ const Navigation = () => {
                   </Button>
                 </Link>
               )}
+              {(user.isAdmin || user.isSuperAdmin) && (
+                <Link to="/admin">
+                  <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+                    <Shield className="w-4 h-4 mr-2" />
+                    Admin
+                  </Button>
+                </Link>
+              )}
               <Button className="btn-cta">
                 Réserver
               </Button>
@@ -117,6 +125,12 @@ const Navigation = () => {
                     </Button>
                   </Link>
                 )}
+                {(user.isAdmin || user.isSuperAdmin) && (<Link to="/admin" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="ghost" size="sm" className="text-white w-full justify-start">
+                    <Shield className="w-4 h-4 mr-2" />
+                    Admin
+                  </Button>
+                </Link>)}
                 <Button className="btn-cta w-fit">
                   Réserver
                 </Button>

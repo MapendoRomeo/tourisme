@@ -7,6 +7,7 @@ interface User {
   email: string;
   fullName: string;
   isAdmin?: boolean;
+  isSuperAdmin?: boolean;
 }
 
 interface AuthContextType {
