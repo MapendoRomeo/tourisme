@@ -1,397 +1,310 @@
-import { useState, useEffect } from "react";
-import axios from "@/api/axios";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, Users, Settings } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import AdminStats from "./AdminStats";
-import ReviewsManagement from "./ReviewsManagement";
-import BookingsManagement from "./BookingsManagement";
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-
-interface AdminStats {
-  users: number;
-  reviews: number;
-  attractions: number;
-  bookings: number;
-}
-
-interface AdminReview {
-  id: number;
-  user: string;
-  attraction: string;
-  rating: number;
-  title: string;
-  comment: string;
-  date: string;
-  status: string;
-}
-
-interface AdminBooking {
-  id: number;
-  user: string;
-  email: string;
-  experience: string;
-  date: string;
-  time: string;
-  participants: number;
-  price: number;
-  status: string;
-  createdAt: string;
-}
-
-interface AdminUser {
-  id: string;
-  name?: string;
-  email: string;
-  isAdmin?: boolean;
-  isSuperAdmin?: boolean;
-}
-interface Attraction {
-  reviewsCount: number;
-  attraction: string;
-}
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
+import AttractionsManagement from "@/components/admin/AttractionsManagement";
+import AccommodationsManagement from "@/components/admin/AccommodationsManagement";
+import TeamManagement from "@/components/admin/TeamManagement";
+import AdminMobileNav from "@/components/admin/AdminMobileNav";
 
 const AdminDashboard = () => {
-  const { toast } = useToast();
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState("stats");
 
-  const [stats, setStats] = useState<AdminStats>({ users: 0, reviews: 0, attractions: 0, bookings: 0 });
-  const [reviews, setReviews] = useState<AdminReview[]>([]);
-  const [bookings, setBookings] = useState<AdminBooking[]>([]);
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [attractionss, setAttractionss] = useState<Attraction[]>([]);
-  const [enabled, setEnabled] = useState(false);
-  const { user, loading } = useAuth();
+  const [stats, setStats] = useState({
+    totalUsers: 120,
+    totalBookings: 350,
+    monthlyRevenue: 15000,
+  });
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const [statsRes, reviewsRes, bookingsRes, usersRes, attract, autoApp] = await Promise.all([
-          axios.get("/stats"),
-          axios.get("/reviews"),
-          axios.get("/reservations"),
-          axios.get("/users"),
-          axios.get("/reviews/stats"),
-          axios.get("/reviews/auto-approve")
-        ]);
-        setStats(statsRes.data);
-        setReviews(reviewsRes.data);
-        setBookings(bookingsRes.data);
-        setUsers(usersRes.data);
-        setAttractionss(attract.data.data);
-        setEnabled(autoApp.data.autoApproveReviews);
-      } catch {
-        toast({ title: "Erreur", description: "Impossible de charger les données administrateur.", variant: "destructive" });
-      }
+  const [attractions, setAttractions] = useState([
+    {
+      id: 1,
+      name: "Vieux Port",
+      description: "Le cœur historique de Saint-Tropez avec ses yachts luxueux et ses cafés emblématiques.",
+      longDescription: "Le Vieux Port de Saint-Tropez est l'âme de la ville. Depuis des siècles, ce port de pêche authentique accueille les visiteurs dans une atmosphère unique mêlant tradition provençale et glamour international. Promenez-vous le long des quais pavés, admirez les yachts luxueux amarrés à quelques mètres des pointus traditionnels, et imprégnez-vous de l'ambiance si particulière de ce lieu mythique.",
+      location: "Centre-ville",
+      category: "Historique",
+      image: "https://images.unsplash.com/photo-1527004760525-7725fc034884?w=800&h=600&fit=crop",
+      gallery: [
+        "https://images.unsplash.com/photo-1527004760525-7725fc034884?w=800&h=600&fit=crop",
+        "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=600&fit=crop",
+        "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800&h=600&fit=crop"
+      ],
+      rating: 4.8,
+      reviewCount: 1500,
+      duration: "2-3h",
+      coordinates: { lat: 43.2677, lng: 6.6370 },
+      openingHours: "24h/24",
+      price: "Gratuit",
+      highlights: [
+        "Architecture provençale authentique",
+        "Yachts de luxe",
+        "Cafés et restaurants emblématiques",
+        "Marché aux poissons matinal"
+      ],
+      tips: [
+        "Meilleure visite tôt le matin ou en fin d'après-midi",
+        "Réservez votre table en terrasse à l'avance",
+        "Parking payant en centre-ville"
+      ]
+    },
+    {
+      id: 2,
+      name: "Plage de Pampelonne",
+      description: "5 km de sable fin et d'eaux cristallines, parfait pour se détendre au soleil.",
+      longDescription: "La plage de Pampelonne s'étend sur près de 5 kilomètres de sable fin doré, offrant l'une des plus belles étendues de la Côte d'Azur. Cette plage mythique, rendue célèbre par Brigitte Bardot dans les années 60, allie beauté naturelle et art de vivre à la française. Ses eaux cristallines d'un bleu azur contrastent magnifiquement avec le sable doré et la végétation méditerranéenne environnante.",
+      location: "Ramatuelle",
+      category: "Plage",
+      image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=600&fit=crop",
+      gallery: [
+        "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=600&fit=crop",
+        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=600&fit=crop",
+        "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800&h=600&fit=crop"
+      ],
+      rating: 4.9,
+      reviewCount: 1200,
+      duration: "Journée",
+      coordinates: { lat: 43.2406, lng: 6.6814 },
+      openingHours: "Accessible 24h/24",
+      price: "Gratuit (clubs de plage payants)",
+      highlights: [
+        "5 km de sable fin",
+        "Eaux cristallines",
+        "Clubs de plage renommés",
+        "Sports nautiques"
+      ],
+      tips: [
+        "Arrivez tôt pour les meilleures places",
+        "Pensez à la crème solaire",
+        "Restaurants de plage pour le déjeuner"
+      ]
+    }
+  ]);
+
+  const [teamMembers, setTeamMembers] = useState([
+    {
+      id: 1,
+      name: "Marie Dubois",
+      role: "Directrice Générale",
+      description: "Passionnée de voyages depuis plus de 15 ans, Marie dirige notre équipe avec expertise et bienveillance.",
+      image: "/placeholder.svg",
+      email: "marie.dubois@villevoyage.com",
+      phone: "+33 1 23 45 67 89",
+      linkedin: "https://linkedin.com/in/marie-dubois",
+      twitter: "https://twitter.com/marie_dubois",
+      github: ""
+    },
+    {
+      id: 2,
+      name: "Pierre Martin",
+      role: "Guide Expert",
+      description: "Spécialiste des circuits culturels et historiques, Pierre vous fera découvrir les secrets les mieux gardés de notre région.",
+      image: "/placeholder.svg",
+      email: "pierre.martin@villevoyage.com",
+      phone: "+33 1 23 45 67 90",
+      linkedin: "https://linkedin.com/in/pierre-martin",
+      twitter: "",
+      github: ""
+    }
+  ]);
+
+  const [accommodations, setAccommodations] = useState([
+    {
+      id: 1,
+      name: "Hôtel de la Plage",
+      description: "Magnifique hôtel en bord de mer avec vue panoramique",
+      location: "Bord de mer",
+      type: "Hôtel",
+      price: 150,
+      image: "/placeholder.svg",
+      rating: 4.5,
+      amenities: ["WiFi", "Piscine", "Restaurant", "Spa"]
+    },
+    {
+      id: 2,
+      name: "Appartement Centre-ville",
+      description: "Appartement moderne au cœur de la ville",
+      location: "Centre-ville",
+      type: "Appartement",
+      price: 80,
+      image: "/placeholder.svg",
+      rating: 4.2,
+      amenities: ["WiFi", "Climatisation", "Parking"]
+    }
+  ]);
+
+  const handleAddAttraction = (attraction: any) => {
+    const newAttraction = {
+      ...attraction,
+      id: attractions.length + 1,
+      rating: 0,
+      reviewCount: 0
     };
-    fetchAll();
-  }, []);
-
-  const handleLogout = () => {
-    toast({
-      title: "Site",
-      description: "Vous etes rediriger vers le site",
-    });
-    // Simulate logout
-    window.location.href = '/';
+    setAttractions(prev => [...prev, newAttraction]);
   };
 
-  const handleUpdateReview = async (reviewId: number, status: 'approved' | 'rejected') => {
-    try {
-      await axios.patch(`/reviews/${reviewId}/status`, { status });
-      const res = await axios.get("/reviews");
-      setReviews(res.data);
-      const statsRes = await axios.get("/stats");
-      setStats(statsRes.data);
-    } catch {
-      toast({ title: "Erreur", description: "Impossible de mettre à jour l'avis.", variant: "destructive" });
-    }
+  const handleUpdateAttraction = (id: number, updatedAttraction: any) => {
+    setAttractions(prev => prev.map(att =>
+      att.id === id ? { ...att, ...updatedAttraction } : att
+    ));
   };
 
-  const handleUpdateBooking = async (bookingId: number, status: 'confirmed' | 'cancelled') => {
-    try {
-      await axios.patch(`/reservations/${bookingId}/status`, { status });
-      const res = await axios.get("/reservations");
-      setBookings(res.data);
-    } catch {
-      toast({ title: "Erreur", description: "Impossible de mettre à jour la réservation.", variant: "destructive" });
-    }
+  const handleDeleteAttraction = (id: number) => {
+    setAttractions(prev => prev.filter(att => att.id !== id));
   };
 
-  const handleDeleteReview = async (reviewId: number) => {
-    try {
-      await axios.delete(`/reviews/${reviewId}`);
-      const res = await axios.get("/reviews");
-      setReviews(res.data);
-    } catch {
-      toast({ title: "Erreur", description: "Impossible de supprimer l'avis.", variant: "destructive" });
-    }
+  const handleAddAccommodation = (accommodation: any) => {
+    const newAccommodation = {
+      ...accommodation,
+      id: accommodations.length + 1,
+      rating: 0
+    };
+    setAccommodations(prev => [...prev, newAccommodation]);
   };
 
-  const handleExportData = async () => {
-    try {
-      const res = await axios.get("/api/admin/export");
-      const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'admin-data-export.json';
-      a.click();
-      toast({ title: "Export réussi", description: "Les données ont été exportées avec succès." });
-    } catch {
-      toast({ title: "Erreur", description: "Impossible d'exporter les données.", variant: "destructive" });
-    }
+  const handleUpdateAccommodation = (id: number, updatedAccommodation: any) => {
+    setAccommodations(prev => prev.map(acc =>
+      acc.id === id ? { ...acc, ...updatedAccommodation } : acc
+    ));
   };
 
-  const toggleAutoApprove = async () => {
-    try {
-      const res = await axios.post("/reviews/auto-approve", { enabled: !enabled })
-      setEnabled(res.data.autoApproveReviews)
-    } catch (err) {
-      toast({ title: "Erreur", description: "Impossible update config", variant: "destructive" });
-    }
+  const handleDeleteAccommodation = (id: number) => {
+    setAccommodations(prev => prev.filter(acc => acc.id !== id));
+  };
+
+  const handleAddTeamMember = (member: any) => {
+    const newMember = {
+      ...member,
+      id: teamMembers.length + 1
+    };
+    setTeamMembers(prev => [...prev, newMember]);
+  };
+
+  const handleUpdateTeamMember = (id: number, updatedMember: any) => {
+    setTeamMembers(prev => prev.map(member =>
+      member.id === id ? { ...member, ...updatedMember } : member
+    ));
+  };
+
+  const handleDeleteTeamMember = (id: number) => {
+    setTeamMembers(prev => prev.filter(member => member.id !== id));
+  };
+
+  if (!user?.isAdmin || !user?.isSuperAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-2">Accès refusé</h1>
+          <p className="text-gray-600">Vous n'avez pas les permissions pour accéder à cette page.</p>
+        </div>
+      </div>
+    );
   }
 
-
-  const currentUser: AdminUser = user;
-
   return (
-    <div className="min-h-screen bg-gradient-card">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="font-display text-2xl font-bold text-ocean-900">
-                Administration VilleVoyage
-              </h1>
-              <p className="text-muted-foreground">Tableau de bord</p>
-            </div>
-            <Button onClick={handleLogout} variant="outline" className="flex items-center gap-2">
-              <LogOut className="w-4 h-4" />
-              Voir le site
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-8">
-        {/* Stats Cards */}
-        <AdminStats stats={stats} />
-
-        {/* Main Content */}
-        {loading ? (
-          <div className="text-center py-8">Chargement des données administrateur...</div>
-        ) : (
-          <Tabs defaultValue="bookings" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="bookings">Réservations</TabsTrigger>
-              <TabsTrigger value="reviews">Gestion des avis</TabsTrigger>
-              <TabsTrigger value="users">Utilisateurs</TabsTrigger>
-              <TabsTrigger value="attractions">Attractions</TabsTrigger>
-              <TabsTrigger value="settings">Paramètres</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="bookings">
-              <BookingsManagement
-                bookings={bookings.map(b => ({
-                  ...b,
-                  status: ['confirmed', 'cancelled', 'pending', 'completed'].includes(b.status)
-                    ? b.status as 'confirmed' | 'cancelled' | 'pending' | 'completed'
-                    : 'pending'
-                }))}
-                onUpdateBooking={handleUpdateBooking}
-              />
-            </TabsContent>
-
-            <TabsContent value="reviews">
-              <ReviewsManagement
-                reviews={reviews.map(r => ({
-                  ...r,
-                  status: ['approved', 'rejected', 'pending'].includes(r.status)
-                    ? r.status as 'approved' | 'rejected' | 'pending'
-                    : 'pending'
-                }))}
-                onUpdateReview={handleUpdateReview}
-                onDeleteReview={handleDeleteReview}
-              />
-            </TabsContent>
-
-            <TabsContent value="users">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Gestion des utilisateurs</CardTitle>
-                  <CardDescription>
-                    Liste des utilisateurs inscrits
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {users.map((user: AdminUser) => (
-                      <div key={user.id} className="flex items-center justify-between p-4 border rounded">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-ocean-500 rounded-full flex items-center justify-center text-white font-semibold">
-                            {user.name?.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="font-medium">{user.name}</p>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${user.isAdmin ? 'bg-ocean-100 text-ocean-800' : user.isSuperAdmin ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'}`}>{user.isAdmin ? 'Admin' : user.isSuperAdmin ? 'SuperAdmin' : 'Utilisateur'}</span>
-                          <span className="text-sm text-muted-foreground">Actif</span>
-                          {/* Bouton d'assignation visible uniquement pour le superAdmin */}
-                          {currentUser.isSuperAdmin && (
-                            <>
-                              {!user.isAdmin && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={async () => {
-                                    try {
-                                      await axios.patch(`/users/${user.id}/role`, { role: "admin" });
-                                      const res = await axios.get("/users");
-                                      setUsers(res.data);
-                                      toast({ title: "Rôle attribué", description: "L'utilisateur est maintenant admin." });
-                                    } catch {
-                                      toast({ title: "Erreur", description: "Impossible d'attribuer le rôle.", variant: "destructive" });
-                                    }
-                                  }}
-                                >
-                                  Assigner Admin
-                                </Button>
-                              )}
-                              {!user.isSuperAdmin && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={async () => {
-                                    try {
-                                      await axios.patch(`/users/${user.id}/role`, { role: "superAdmin" });
-                                      const res = await axios.get("/users");
-                                      setUsers(res.data);
-                                      toast({ title: "Rôle attribué", description: "L'utilisateur est maintenant superAdmin." });
-                                    } catch {
-                                      toast({ title: "Erreur", description: "Impossible d'attribuer le rôle.", variant: "destructive" });
-                                    }
-                                  }}
-                                >
-                                  Assigner SuperAdmin
-                                </Button>
-                              )}
-                              {(user.isAdmin || user.isSuperAdmin) && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={async () => {
-                                    try {
-                                      await axios.patch(`/users/${user.id}/role`, { role: "user" });
-                                      const res = await axios.get("/users");
-                                      setUsers(res.data);
-                                      toast({ title: "Rôle attribué", description: "L'utilisateur est maintenant utilisateur." });
-                                    } catch {
-                                      toast({ title: "Erreur", description: "Impossible d'attribuer le rôle.", variant: "destructive" });
-                                    }
-                                  }}
-                                >
-                                  Assigner Utilisateur
-                                </Button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="attractions">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Gestion des attractions</CardTitle>
-                  <CardDescription>
-                    Ajoutez et modifiez les attractions
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {attractionss?.map((attraction, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 border rounded">
-                        <div>
-                          <p className="font-medium">{attraction.attraction}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {attraction.reviewsCount} avis
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline">
-                            Modifier
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            <Settings className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="settings">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Paramètres système</CardTitle>
-                  <CardDescription>
-                    Configuration du système
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">Notifications email</p>
-                        <p className="text-sm text-muted-foreground">Recevoir les notifications par email</p>
-                      </div>
-                      <Button size="sm" variant="outline">
-                        Activé
-                      </Button>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">Modération automatique</p>
-                        <p className="text-sm text-muted-foreground">Approuver automatiquement les avis</p>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={toggleAutoApprove}
-                      >
-                        {enabled ? "Activé" : "Desactivé"}
-                      </Button>
-                    </div>
-
-                    <div className="pt-4 border-t">
-                      <Button onClick={handleExportData} className="w-full">
-                        Exporter les données
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        )}
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Tableau de bord administrateur</h1>
+        <p className="text-gray-600">Bienvenue {user.fullName}</p>
       </div>
+
+      {/* Navigation mobile */}
+      <AdminMobileNav activeTab={activeTab} onTabChange={setActiveTab} />
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        {/* Navigation desktop - cachée sur mobile */}
+        <TabsList className="hidden md:grid w-full grid-cols-7">
+          <TabsTrigger value="stats">Statistiques</TabsTrigger>
+          <TabsTrigger value="attractions">Attractions</TabsTrigger>
+          <TabsTrigger value="experiences">Expériences</TabsTrigger>
+          <TabsTrigger value="accommodations">Hébergements</TabsTrigger>
+          <TabsTrigger value="team">Équipe</TabsTrigger>
+          <TabsTrigger value="bookings">Réservations</TabsTrigger>
+          <TabsTrigger value="reviews">Avis</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="stats">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Total des utilisateurs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalUsers}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Total des réservations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalBookings}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Revenu mensuel</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${stats.monthlyRevenue}</div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="attractions">
+          <AttractionsManagement
+            attractions={attractions}
+            onAddAttraction={handleAddAttraction}
+            onUpdateAttraction={handleUpdateAttraction}
+            onDeleteAttraction={handleDeleteAttraction}
+          />
+        </TabsContent>
+
+        <TabsContent value="experiences">
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Gestion des expériences</h2>
+            <p>Ici, vous pourrez gérer les expériences offertes aux utilisateurs.</p>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="accommodations">
+          <AccommodationsManagement
+            accommodations={accommodations}
+            onAddAccommodation={handleAddAccommodation}
+            onUpdateAccommodation={handleUpdateAccommodation}
+            onDeleteAccommodation={handleDeleteAccommodation}
+          />
+        </TabsContent>
+
+        <TabsContent value="team">
+          <TeamManagement
+            members={teamMembers}
+            onAddMember={handleAddTeamMember}
+            onUpdateMember={handleUpdateTeamMember}
+            onDeleteMember={handleDeleteTeamMember}
+          />
+        </TabsContent>
+
+        <TabsContent value="bookings">
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Gestion des réservations</h2>
+            <p>Ici, vous pourrez gérer les réservations effectuées par les utilisateurs.</p>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="reviews">
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Gestion des avis</h2>
+            <p>Ici, vous pourrez gérer les avis laissés par les utilisateurs.</p>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
 
 export default AdminDashboard;
-
-
