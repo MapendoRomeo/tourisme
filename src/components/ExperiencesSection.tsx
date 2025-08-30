@@ -1,12 +1,13 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sailboat, Camera, Wine, Utensils } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import axios from "@/api/axios";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import QuickLoginModal from "@/components/auth/QuickLoginModal";
+import { Link } from "react-router-dom";
 
 interface Experience {
   id: number;
@@ -186,6 +187,14 @@ const ExperiencesSection = () => {
                 </Card>
               ))
             )}
+          </div>
+          <div className="text-center mt-12">
+            <Link to="/experiences">
+              <Button className="btn-cta">
+                Voir toutes les expériences
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

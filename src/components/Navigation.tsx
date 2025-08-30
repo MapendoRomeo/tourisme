@@ -12,11 +12,11 @@ const Navigation = () => {
 
   const navItems = [
     { label: "Accueil", href: "/" },
-    { label: "Attractions", href: "/#attractions" },
-    { label: "Expériences", href: "/#experiences" },
-    { label: "Hébergements", href: "/#hotels" },
+    { label: "Attractions", href: "/attractions" },
+    { label: "Expériences", href: "/experiences" },
+    { label: "Hébergements", href: "/accommodations" },
     { label: "Avis", href: "/reviews" },
-    { label: "Contact", href: "/#contact" }
+    { label: "Contact", href: "/contact" }
   ];
 
   const isHomePage = location.pathname === "/";

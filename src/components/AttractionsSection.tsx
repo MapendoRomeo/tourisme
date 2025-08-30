@@ -1,7 +1,9 @@
 
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Clock, Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MapPin, Clock, Star, ArrowRight, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 const AttractionsSection = () => {
   const { toast } = useToast();
@@ -53,7 +55,7 @@ const AttractionsSection = () => {
     // Open Google Maps with the attraction coordinates
     const url = `https://www.google.com/maps/search/?api=1&query=${attraction.coordinates.lat},${attraction.coordinates.lng}`;
     window.open(url, '_blank');
-    
+
     toast({
       title: "Carte ouverte",
       description: `Localisation de ${attraction.name} ouverte dans Google Maps`,
@@ -76,8 +78,8 @@ const AttractionsSection = () => {
           {attractions.map((attraction) => (
             <Card key={attraction.id} className="attraction-card">
               <div className="relative overflow-hidden">
-                <img 
-                  src={attraction.image} 
+                <img
+                  src={attraction.image}
                   alt={attraction.name}
                   className="attraction-image"
                 />
@@ -91,7 +93,7 @@ const AttractionsSection = () => {
                   <span className="text-sm font-medium ml-1">{attraction.rating}</span>
                 </div>
               </div>
-              
+
               <CardContent className="p-6">
                 <h3 className="font-display text-xl font-semibold mb-2 text-ocean-900">
                   {attraction.name}
@@ -99,13 +101,13 @@ const AttractionsSection = () => {
                 <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
                   {attraction.description}
                 </p>
-                
-                <div className="flex items-center justify-between text-sm">
+
+                <div className="flex items-center justify-between text-sm mb-4">
                   <div className="flex items-center text-ocean-600">
                     <Clock className="w-4 h-4 mr-1" />
                     {attraction.duration}
                   </div>
-                  <button 
+                  <button
                     onClick={() => handleViewOnMap(attraction)}
                     className="flex items-center text-ocean-600 hover:text-sunset-500 transition-colors cursor-pointer"
                   >
@@ -113,9 +115,25 @@ const AttractionsSection = () => {
                     Voir sur la carte
                   </button>
                 </div>
+
+                <Link to={`/attractions/${attraction.id}`}>
+                  <Button variant="outline" className="w-full text-ocean-600 border-ocean-200 hover:bg-ocean-50 hover:text-ocean-700">
+                    <Eye className="w-4 h-4 mr-2" />
+                    Voir plus
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        <div className="text-center mt-12">
+          <Link to="/attractions">
+            <Button className="btn-cta">
+              Voir toutes les attractions
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </Link>
         </div>
       </div>
     </section>

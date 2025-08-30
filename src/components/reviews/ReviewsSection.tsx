@@ -5,8 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Star, MessageSquare, ThumbsUp, Calendar } from "lucide-react";
+import { Star, MessageSquare, ThumbsUp, Calendar, ArrowRight } from "lucide-react";
 import ReviewForm from "./ReviewForm";
+import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 interface Review {
@@ -188,7 +189,13 @@ const ReviewsSection = () => {
         </div>
 
         {/* CTA pour ajouter un avis */}
-        <div className="text-center">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link to="/reviews">
+            <Button variant="outline" className="border-ocean-500 text-ocean-600 hover:bg-ocean-50">
+              Voir tous les avis
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </Link>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button className="btn-cta">

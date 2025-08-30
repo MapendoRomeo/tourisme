@@ -1,27 +1,38 @@
 
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Index from "@/pages/Index";
-import LoginPage from "@/pages/LoginPage";
-import AdminPage from "@/pages/AdminPage";
-import ReviewsPage from "@/pages/ReviewsPage";
-import NotFound from "@/pages/NotFound";
 import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider } from "@/context/AuthContext";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Index from "./pages/Index";
+import AttractionsPage from "./pages/AttractionsPage";
+import AttractionDetailPage from "./pages/AttractionDetailPage";
+import ExperiencesPage from "./pages/ExperiencesPage";
+import AccommodationsPage from "./pages/AccommodationsPage";
+import TeamPage from "./pages/TeamPage";
+import ReviewsPage from "./pages/ReviewsPage";
+import ContactPage from "./pages/ContactPage";
+import LoginPage from "./pages/LoginPage";
+import AdminPage from "./pages/AdminPage";
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
+    <Router>
+      <div className="min-h-screen">
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/attractions" element={<AttractionsPage />} />
+          <Route path="/attractions/:id" element={<AttractionDetailPage />} />
+          <Route path="/experiences" element={<ExperiencesPage />} />
+          <Route path="/accommodations" element={<AccommodationsPage />} />
+          <Route path="/team" element={<TeamPage />} />
+          <Route path="/reviews" element={<ReviewsPage />} />
+          <Route path="/contact" element={<ContactPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/admin" element={<AdminPage />} />
-          <Route path="/reviews" element={<ReviewsPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />
-      </Router>
-    </AuthProvider>
+      </div>
+    </Router>
   );
 }
 
