@@ -67,7 +67,7 @@ const Navigation = () => {
                   </Button>
                 </Link>
               )}
-              {(user.isAdmin || user.isSuperAdmin) && (
+              {(user?.isAdmin || user?.isSuperAdmin) && (
                 <Link to="/admin">
                   <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
                     <Shield className="w-4 h-4 mr-2" />
@@ -125,7 +125,7 @@ const Navigation = () => {
                     </Button>
                   </Link>
                 )}
-                {(user.isAdmin || user.isSuperAdmin) && (<Link to="/admin" onClick={() => setIsMenuOpen(false)}>
+                {(user?.isAdmin || user?.isSuperAdmin) && (<Link to="/admin" onClick={() => setIsMenuOpen(false)}>
                   <Button variant="ghost" size="sm" className="text-white w-full justify-start">
                     <Shield className="w-4 h-4 mr-2" />
                     Admin
