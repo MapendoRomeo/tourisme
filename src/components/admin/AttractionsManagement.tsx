@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,9 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Save, X, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ImageUpload } from "@/components/ui/image-upload";
+import { apiService, BASE_URL } from "@/services/api";
 
 interface Attraction {
-  id: number;
+  id: string;
   name: string;
   description: string;
   longDescription: string;
@@ -31,26 +32,26 @@ interface Attraction {
 interface AttractionsManagementProps {
   attractions: Attraction[];
   onAddAttraction: (attraction: Omit<Attraction, 'id' | 'rating' | 'reviewCount'>) => void;
-  onUpdateAttraction: (id: number, attraction: Omit<Attraction, 'id' | 'rating' | 'reviewCount'>) => void;
-  onDeleteAttraction: (id: number) => void;
+  onUpdateAttraction: (id: string, attraction: Omit<Attraction, 'id' | 'rating' | 'reviewCount'>) => void;
+  onDeleteAttraction: (id: string) => void;
 }
 
-const AttractionsManagement = ({ 
-  attractions, 
-  onAddAttraction, 
-  onUpdateAttraction, 
-  onDeleteAttraction 
+const AttractionsManagement = ({
+  attractions,
+  onAddAttraction,
+  onUpdateAttraction,
+  onDeleteAttraction
 }: AttractionsManagementProps) => {
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     longDescription: '',
     location: '',
     category: '',
-    image: '/placeholder.svg',
+    image: '',
     gallery: [''],
     duration: '',
     coordinates: { lat: 43.2677, lng: 6.6370 },
@@ -59,6 +60,12 @@ const AttractionsManagement = ({
     highlights: [''],
     tips: ['']
   });
+
+  // Ajoute ces hooks pour gérer les images uploadées
+  const [mainImageFile, setMainImageFile] = useState<File | null>(null);
+  const [mainImagePreview, setMainImagePreview] = useState<string>(formData.image);
+  const [galleryFiles, setGalleryFiles] = useState<(File | null)[]>(formData.gallery.map(() => null));
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>(formData.gallery);
 
   const categories = ['Monument', 'Plage', 'Musée', 'Parc', 'Restaurant', 'Shopping', 'Historique'];
 
@@ -69,7 +76,7 @@ const AttractionsManagement = ({
       longDescription: '',
       location: '',
       category: '',
-      image: '/placeholder.svg',
+      image: '',
       gallery: [''],
       duration: '',
       coordinates: { lat: 43.2677, lng: 6.6370 },
@@ -78,9 +85,65 @@ const AttractionsManagement = ({
       highlights: [''],
       tips: ['']
     });
+    setMainImageFile(null);
+    setMainImagePreview("");
+    setGalleryFiles([]);
+    setGalleryPreviews([]);
   };
 
-  const handleSubmit = () => {
+
+  const uploadImageToDb = async (file: File) => {
+    const response = await apiService.uploadFile(file, '/images/upload'); // endpoint à adapter
+    // Le backend doit retourner l'id ou l'url d'accès à l'image
+    return response.data.imageUrl; // ou response.data.url
+  };
+
+  const handleMainImageSelect = (file: File) => {
+    setMainImageFile(file);
+    setMainImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleMainImageRemove = () => {
+    setMainImageFile(null);
+    setMainImagePreview("");
+  };
+
+  const handleGalleryImageSelect = (index: number, file: File) => {
+    const files = [...galleryFiles];
+    files[index] = file;
+    setGalleryFiles(files);
+
+    const previews = [...galleryPreviews];
+    previews[index] = URL.createObjectURL(file);
+    setGalleryPreviews(previews);
+  };
+
+  const handleGalleryImageRemove = (index: number) => {
+    const files = [...galleryFiles];
+    files[index] = null;
+    setGalleryFiles(files);
+
+    const previews = [...galleryPreviews];
+    previews[index] = "";
+    setGalleryPreviews(previews);
+  };
+
+  const addGalleryImageField = () => {
+    setFormData(prev => ({ ...prev, gallery: [...prev.gallery, ""] }));
+    setGalleryFiles(prev => [...prev, null]);
+    setGalleryPreviews(prev => [...prev, ""]);
+  };
+
+  const removeGalleryImageField = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      gallery: prev.gallery.filter((_, i) => i !== index)
+    }));
+    setGalleryFiles(prev => prev.filter((_, i) => i !== index));
+    setGalleryPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async () => {
     if (!formData.name || !formData.description || !formData.location || !formData.category) {
       toast({
         title: "Erreur",
@@ -90,22 +153,40 @@ const AttractionsManagement = ({
       return;
     }
 
+    // Upload image principale
+    let imageUrl = formData.image;
+    if (mainImageFile) {
+      imageUrl = await uploadImageToDb(mainImageFile); // id ou url retourné par le backend
+    }
+
+    // Upload galerie
+    let galleryUrls: string[] = [];
+    for (let i = 0; i < galleryFiles.length; i++) {
+      if (galleryFiles[i]) {
+        const url = await uploadImageToDb(galleryFiles[i]!); // id ou url retourné par le backend
+        galleryUrls.push(url);
+      } else if (formData.gallery[i]) {
+        galleryUrls.push(formData.gallery[i]); // garde l'url existante si pas modifiée
+      }
+    }
+
     const processedData = {
       ...formData,
-      gallery: formData.gallery.filter(url => url.trim() !== ''),
+      image: imageUrl,
+      gallery: galleryUrls,
       highlights: formData.highlights.filter(highlight => highlight.trim() !== ''),
       tips: formData.tips.filter(tip => tip.trim() !== '')
     };
 
     if (editingId) {
-      onUpdateAttraction(editingId, processedData);
+      await onUpdateAttraction(editingId, processedData);
       setEditingId(null);
       toast({
         title: "Attraction modifiée",
         description: "L'attraction a été mise à jour avec succès.",
       });
     } else {
-      onAddAttraction(processedData);
+      await onAddAttraction(processedData);
       setIsAdding(false);
       toast({
         title: "Attraction ajoutée",
@@ -133,9 +214,17 @@ const AttractionsManagement = ({
     });
     setEditingId(attraction.id);
     setIsAdding(false);
+
+    // Affiche l'image principale existante
+    setMainImagePreview(`${BASE_URL}${attraction.image}`);
+    setMainImageFile(null);
+
+    // Affiche les images de la galerie existantes
+    setGalleryPreviews(attraction.gallery.map(img => img ? `${BASE_URL}${img}` : ""));
+    setGalleryFiles(attraction.gallery.map(() => null));
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     onDeleteAttraction(id);
     toast({
       title: "Attraction supprimée",
@@ -181,8 +270,8 @@ const AttractionsManagement = ({
               Ajoutez et modifiez les attractions touristiques
             </CardDescription>
           </div>
-          <Button 
-            onClick={() => setIsAdding(true)} 
+          <Button
+            onClick={() => setIsAdding(true)}
             className="flex items-center gap-2"
             disabled={isAdding || editingId !== null}
           >
@@ -273,8 +362,8 @@ const AttractionsManagement = ({
                     type="number"
                     step="any"
                     value={formData.coordinates.lat}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
                       coordinates: { ...prev.coordinates, lat: parseFloat(e.target.value) || 0 }
                     }))}
                     placeholder="Latitude"
@@ -283,8 +372,8 @@ const AttractionsManagement = ({
                     type="number"
                     step="any"
                     value={formData.coordinates.lng}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
                       coordinates: { ...prev.coordinates, lng: parseFloat(e.target.value) || 0 }
                     }))}
                     placeholder="Longitude"
@@ -292,33 +381,34 @@ const AttractionsManagement = ({
                 </div>
               </div>
 
-              {/* Images */}
+              {/* Image principale */}
               <div>
-                <Label htmlFor="image">Image principale</Label>
-                <Input
-                  id="image"
-                  value={formData.image}
-                  onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
-                  placeholder="URL de l'image principale"
+                <Label>Image principale</Label>
+                <ImageUpload
+                  preview={mainImagePreview}
+                  onImageSelect={handleMainImageSelect}
+                  onImageRemove={handleMainImageRemove}
+                  className="mb-2"
                 />
               </div>
 
               {/* Galerie */}
               <div>
                 <Label>Galerie d'images</Label>
-                {formData.gallery.map((url, index) => (
-                  <div key={index} className="flex gap-2 mt-2">
-                    <Input
-                      value={url}
-                      onChange={(e) => updateArrayField('gallery', index, e.target.value)}
-                      placeholder="URL de l'image"
+                {galleryPreviews.map((preview, index) => (
+                  <div key={index} className="flex gap-2 mt-2 items-center">
+                    <ImageUpload
+                      preview={preview}
+                      onImageSelect={(file) => handleGalleryImageSelect(index, file)}
+                      onImageRemove={() => handleGalleryImageRemove(index)}
+                      className="w-32"
                     />
-                    {formData.gallery.length > 1 && (
+                    {galleryPreviews.length > 1 && (
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => removeArrayField('gallery', index)}
+                        onClick={() => removeGalleryImageField(index)}
                       >
                         <X className="w-4 h-4" />
                       </Button>
@@ -329,7 +419,7 @@ const AttractionsManagement = ({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => addArrayField('gallery')}
+                  onClick={addGalleryImageField}
                   className="mt-2"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -447,11 +537,12 @@ const AttractionsManagement = ({
           {attractions.map((attraction) => (
             <div key={attraction.id} className="flex items-start justify-between p-4 border rounded-lg">
               <div className="flex gap-4">
-                <img 
-                  src={attraction.image} 
+                <img
+                  src={`${BASE_URL}${attraction.image}`}
                   alt={attraction.name}
                   className="w-16 h-16 object-cover rounded-md"
                 />
+
                 <div>
                   <h5 className="font-medium">{attraction.name}</h5>
                   <p className="text-sm text-muted-foreground mb-1">{attraction.location}</p>
@@ -467,22 +558,22 @@ const AttractionsManagement = ({
                   </div>
                   <p className="text-sm mt-2 max-w-md">{attraction.description}</p>
                   <div className="text-xs text-muted-foreground mt-1">
-                    {attraction.rating.toFixed(1)} ⭐ ({attraction.reviewCount} avis)
+                    {attraction.rating ? attraction.rating.toFixed(1) : 0} ⭐ ({attraction.reviewCount ? attraction.reviewCount : 0} avis)
                   </div>
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
+                <Button
+                  size="sm"
+                  variant="outline"
                   onClick={() => handleEdit(attraction)}
                   disabled={isAdding || editingId !== null}
                 >
                   <Edit className="w-4 h-4" />
                 </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
+                <Button
+                  size="sm"
+                  variant="outline"
                   onClick={() => handleDelete(attraction.id)}
                 >
                   <Trash2 className="w-4 h-4" />

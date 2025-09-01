@@ -10,7 +10,7 @@ import {
   SheetDescription,
   SheetClose,
 } from "@/components/ui/sheet";
-import { Menu, BarChart3, MapPin, Camera, Building, Users, Calendar, Star } from "lucide-react";
+import { Menu, BarChart3, MapPin, Camera, Building, Users, Calendar, Star, UserCog } from "lucide-react";
 
 interface AdminMobileNavProps {
   activeTab: string;
@@ -20,6 +20,7 @@ interface AdminMobileNavProps {
 const AdminMobileNav = ({ activeTab, onTabChange }: AdminMobileNavProps) => {
   const tabs = [
     { id: "stats", label: "Statistiques", icon: BarChart3 },
+    { id: "users", label: "Utilisateurs", icon: UserCog },
     { id: "attractions", label: "Attractions", icon: MapPin },
     { id: "experiences", label: "Expériences", icon: Camera },
     { id: "accommodations", label: "Hébergements", icon: Building },
@@ -32,32 +33,36 @@ const AdminMobileNav = ({ activeTab, onTabChange }: AdminMobileNavProps) => {
     <div className="md:hidden mb-6">
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" className="w-full justify-start bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
+          <Button variant="outline" className="w-full justify-start bg-white text-gray-900 border-gray-300 hover:bg-gray-50 shadow-sm">
             <Menu className="w-4 h-4 mr-2" />
-            Navigation Admin
+            <span className="font-medium">Navigation Admin</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-[280px] sm:w-[350px] bg-white">
-          <SheetHeader className="pb-4">
-            <SheetTitle className="text-gray-900 text-lg font-semibold">Menu Administration</SheetTitle>
-            <SheetDescription className="text-gray-600">
+        <SheetContent side="left" className="w-[300px] bg-white border-r border-gray-200">
+          <SheetHeader className="pb-6 border-b border-gray-100">
+            <SheetTitle className="text-gray-900 text-xl font-bold">Administration</SheetTitle>
+            <SheetDescription className="text-gray-600 text-sm">
               Sélectionnez une section à gérer
             </SheetDescription>
           </SheetHeader>
-          <div className="grid gap-3 py-4">
+          <div className="grid gap-2 py-6">
             {tabs.map((tab) => (
               <SheetClose key={tab.id} asChild>
                 <Button
-                  variant={activeTab === tab.id ? "default" : "ghost"}
-                  className={`w-full justify-start h-12 text-left ${
+                  variant="ghost"
+                  className={`w-full justify-start h-14 text-left rounded-lg transition-all duration-200 ${
                     activeTab === tab.id 
-                      ? "bg-ocean-600 text-white hover:bg-ocean-700" 
-                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                      ? "bg-ocean-100 text-ocean-800 shadow-sm border border-ocean-200" 
+                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900 border border-transparent"
                   }`}
                   onClick={() => onTabChange(tab.id)}
                 >
-                  <tab.icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                  <span className="font-medium">{tab.label}</span>
+                  <div className="flex items-center gap-4">
+                    <tab.icon className={`w-5 h-5 flex-shrink-0 ${
+                      activeTab === tab.id ? "text-ocean-600" : "text-gray-500"
+                    }`} />
+                    <span className="font-medium text-base">{tab.label}</span>
+                  </div>
                 </Button>
               </SheetClose>
             ))}

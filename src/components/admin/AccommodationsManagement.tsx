@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,9 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Save, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { apiService, BASE_URL } from "@/services/api";
 
 interface Accommodation {
-  id: number;
+  id: string;
   name: string;
   description: string;
   location: string;
@@ -25,19 +25,19 @@ interface Accommodation {
 interface AccommodationsManagementProps {
   accommodations: Accommodation[];
   onAddAccommodation: (accommodation: Omit<Accommodation, 'id' | 'rating'>) => void;
-  onUpdateAccommodation: (id: number, accommodation: Omit<Accommodation, 'id' | 'rating'>) => void;
-  onDeleteAccommodation: (id: number) => void;
+  onUpdateAccommodation: (id: string, accommodation: Omit<Accommodation, 'id' | 'rating'>) => void;
+  onDeleteAccommodation: (id: string) => void;
 }
 
-const AccommodationsManagement = ({ 
-  accommodations, 
-  onAddAccommodation, 
-  onUpdateAccommodation, 
-  onDeleteAccommodation 
+const AccommodationsManagement = ({
+  accommodations,
+  onAddAccommodation,
+  onUpdateAccommodation,
+  onDeleteAccommodation
 }: AccommodationsManagementProps) => {
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [formData, setFormData] = useState({
@@ -67,21 +67,38 @@ const AccommodationsManagement = ({
     setImagePreview('');
   };
 
+  // Fonction d'upload
+  const uploadImageToDb = async (file: File) => {
+    const response = await apiService.uploadFile(file, '/images/upload');
+    return response.data.imageUrl; // ou response.data.url selon ton backend
+  };
+
+  // Sélection et suppression
   const handleImageSelect = (file: File) => {
     setImageFile(file);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setImagePreview(result);
-      setFormData(prev => ({ ...prev, image: result }));
-    };
-    reader.readAsDataURL(file);
+    setImagePreview(URL.createObjectURL(file));
   };
 
   const handleImageRemove = () => {
     setImageFile(null);
     setImagePreview('');
-    setFormData(prev => ({ ...prev, image: '' }));
+  };
+
+  // Affiche l'image existante lors de l'édition
+  const handleEdit = (accommodation: Accommodation) => {
+    setFormData({
+      name: accommodation.name,
+      description: accommodation.description,
+      location: accommodation.location,
+      type: accommodation.type,
+      price: accommodation.price,
+      image: accommodation.image,
+      amenities: accommodation.amenities
+    });
+    setImagePreview(`${BASE_URL}${accommodation.image}`);
+    setImageFile(null);
+    setEditingId(accommodation.id);
+    setIsAdding(false);
   };
 
   const handleAmenityToggle = (amenity: string) => {
@@ -93,7 +110,7 @@ const AccommodationsManagement = ({
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name || !formData.description || !formData.location || !formData.type || formData.price <= 0) {
       toast({
         title: "Erreur",
@@ -103,15 +120,26 @@ const AccommodationsManagement = ({
       return;
     }
 
+    let imageUrl = formData.image;
+    if (imageFile) {
+      imageUrl = await uploadImageToDb(imageFile);
+    }
+
+    const accommodationData = {
+      ...formData,
+      image: imageUrl,
+      amenities: formData.amenities
+    };
+
     if (editingId) {
-      onUpdateAccommodation(editingId, formData);
+      onUpdateAccommodation(editingId, accommodationData);
       setEditingId(null);
       toast({
         title: "Hébergement modifié",
         description: "L'hébergement a été mis à jour avec succès.",
       });
     } else {
-      onAddAccommodation(formData);
+      onAddAccommodation(accommodationData);
       setIsAdding(false);
       toast({
         title: "Hébergement ajouté",
@@ -119,24 +147,11 @@ const AccommodationsManagement = ({
       });
     }
     resetForm();
+    setImageFile(null);
+    setImagePreview('');
   };
 
-  const handleEdit = (accommodation: Accommodation) => {
-    setFormData({
-      name: accommodation.name,
-      description: accommodation.description,
-      location: accommodation.location,
-      type: accommodation.type,
-      price: accommodation.price,
-      image: accommodation.image,
-      amenities: accommodation.amenities
-    });
-    setImagePreview(accommodation.image);
-    setEditingId(accommodation.id);
-    setIsAdding(false);
-  };
-
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     onDeleteAccommodation(id);
     toast({
       title: "Hébergement supprimé",
@@ -161,8 +176,8 @@ const AccommodationsManagement = ({
               Ajoutez et modifiez les hébergements disponibles
             </CardDescription>
           </div>
-          <Button 
-            onClick={() => setIsAdding(true)} 
+          <Button
+            onClick={() => setIsAdding(true)}
             className="flex items-center gap-2"
             disabled={isAdding || editingId !== null}
           >
@@ -277,8 +292,8 @@ const AccommodationsManagement = ({
           {accommodations.map((accommodation) => (
             <div key={accommodation.id} className="flex items-start justify-between p-4 border rounded-lg">
               <div className="flex gap-4">
-                <img 
-                  src={accommodation.image} 
+                <img
+                  src={`${BASE_URL}${accommodation.image}`}
                   alt={accommodation.name}
                   className="w-20 h-20 object-cover rounded-md"
                 />
@@ -310,17 +325,17 @@ const AccommodationsManagement = ({
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
+                <Button
+                  size="sm"
+                  variant="outline"
                   onClick={() => handleEdit(accommodation)}
                   disabled={isAdding || editingId !== null}
                 >
                   <Edit className="w-4 h-4" />
                 </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
+                <Button
+                  size="sm"
+                  variant="outline"
                   onClick={() => handleDelete(accommodation.id)}
                 >
                   <Trash2 className="w-4 h-4" />

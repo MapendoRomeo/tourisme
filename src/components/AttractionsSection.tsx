@@ -1,56 +1,30 @@
-
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapPin, Clock, Star, ArrowRight, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import { apiService, BASE_URL } from "@/services/api";
 
 const AttractionsSection = () => {
   const { toast } = useToast();
+  const [attractions, setAttractions] = useState([]);
 
-  const attractions = [
-    {
-      id: 1,
-      name: "Vieux Port",
-      description: "Le cœur historique de Saint-Tropez avec ses yachts luxueux et ses cafés emblématiques.",
-      image: "https://images.unsplash.com/photo-1527004760525-7725fc034884?w=800&h=600&fit=crop",
-      duration: "2-3h",
-      rating: 4.8,
-      category: "Historique",
-      coordinates: { lat: 43.2677, lng: 6.6370 }
-    },
-    {
-      id: 2,
-      name: "Plage de Pampelonne",
-      description: "5 km de sable fin et d'eaux cristallines, parfait pour se détendre au soleil.",
-      image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=600&fit=crop",
-      duration: "Journée",
-      rating: 4.9,
-      category: "Plage",
-      coordinates: { lat: 43.2406, lng: 6.6814 }
-    },
-    {
-      id: 3,
-      name: "Citadelle de Saint-Tropez",
-      description: "Forteresse du XVIIe siècle offrant une vue panoramique sur la baie.",
-      image: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800&h=600&fit=crop",
-      duration: "1-2h",
-      rating: 4.6,
-      category: "Culture",
-      coordinates: { lat: 43.2741, lng: 6.6386 }
-    },
-    {
-      id: 4,
-      name: "Place des Lices",
-      description: "Place animée avec son marché provençal et ses terrasses ombragées.",
-      image: "https://images.unsplash.com/photo-1571104508999-893933ded431?w=800&h=600&fit=crop",
-      duration: "1h",
-      rating: 4.7,
-      category: "Shopping",
-      coordinates: { lat: 43.2679, lng: 6.6359 }
-    }
-  ];
-
+  useEffect(() => {
+    const fetchAttractions = async () => {
+      try {
+        const data = await apiService.getAttractions();
+        setAttractions(data);
+      } catch {
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les attractions.",
+          variant: "destructive"
+        });
+      }
+    };
+    fetchAttractions();
+  }, []);
   const handleViewOnMap = (attraction: typeof attractions[0]) => {
     // Open Google Maps with the attraction coordinates
     const url = `https://www.google.com/maps/search/?api=1&query=${attraction.coordinates.lat},${attraction.coordinates.lng}`;
@@ -79,7 +53,7 @@ const AttractionsSection = () => {
             <Card key={attraction.id} className="attraction-card">
               <div className="relative overflow-hidden">
                 <img
-                  src={attraction.image}
+                  src={`${BASE_URL}${attraction.image}`}
                   alt={attraction.name}
                   className="attraction-image"
                 />

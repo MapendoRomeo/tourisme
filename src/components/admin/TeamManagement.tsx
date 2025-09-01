@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ImageUpload } from "@/components/ui/image-upload";
 import { PlusCircle, Edit, Trash2, Mail, Phone, Linkedin, Twitter, Github } from "lucide-react";
 import { toast } from "sonner";
+import { apiService, BASE_URL } from "@/services/api";
 
 interface TeamMember {
-  id: number;
+  id: string;
   name: string;
   role: string;
   description: string;
@@ -27,8 +27,8 @@ interface TeamMember {
 interface TeamManagementProps {
   members: TeamMember[];
   onAddMember: (member: Omit<TeamMember, 'id'>) => void;
-  onUpdateMember: (id: number, member: Partial<TeamMember>) => void;
-  onDeleteMember: (id: number) => void;
+  onUpdateMember: (id: string, member: Partial<TeamMember>) => void;
+  onDeleteMember: (id: string) => void;
 }
 
 const TeamManagement = ({
@@ -41,6 +41,7 @@ const TeamManagement = ({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -69,33 +70,48 @@ const TeamManagement = ({
     setImagePreview("");
   };
 
+  // Fonction d'upload
+  const uploadImageToDb = async (file: File) => {
+    const response = await apiService.uploadFile(file, '/images/upload');
+    return response.data.imageUrl; // ou response.data.url selon ton backend
+  };
+
+  // Sélection et suppression
   const handleImageSelect = (file: File) => {
-    const url = URL.createObjectURL(file);
-    setImagePreview(url);
-    setFormData(prev => ({ ...prev, image: url }));
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
   };
 
   const handleImageRemove = () => {
+    setImageFile(null);
     setImagePreview("");
-    setFormData(prev => ({ ...prev, image: "" }));
   };
 
-  const handleAddMember = () => {
+  // Ajout d'un membre
+  const handleAddMember = async () => {
     if (!formData.name || !formData.role || !formData.email) {
       toast.error("Veuillez remplir les champs obligatoires");
       return;
     }
 
+    let imageUrl = formData.image;
+    if (imageFile) {
+      imageUrl = await uploadImageToDb(imageFile);
+    }
+
     onAddMember({
       ...formData,
-      image: formData.image || "/placeholder.svg"
+      image: imageUrl || "/placeholder.svg"
     });
 
     toast.success("Membre ajouté avec succès");
     resetForm();
     setIsAddModalOpen(false);
+    setImageFile(null);
+    setImagePreview("");
   };
 
+  // Edition d'un membre
   const handleEditMember = (member: TeamMember) => {
     setEditingMember(member);
     setFormData({
@@ -109,28 +125,37 @@ const TeamManagement = ({
       twitter: member.twitter || "",
       github: member.github || ""
     });
-    setImagePreview(member.image);
+    setImagePreview(`${BASE_URL}${member.image}`);
+    setImageFile(null);
     setIsEditModalOpen(true);
   };
 
-  const handleUpdateMember = () => {
+  // Mise à jour d'un membre
+  const handleUpdateMember = async () => {
     if (!formData.name || !formData.role || !formData.email || !editingMember) {
       toast.error("Veuillez remplir les champs obligatoires");
       return;
     }
 
+    let imageUrl = formData.image;
+    if (imageFile) {
+      imageUrl = await uploadImageToDb(imageFile);
+    }
+
     onUpdateMember(editingMember.id, {
       ...formData,
-      image: formData.image || "/placeholder.svg"
+      image: imageUrl || "/placeholder.svg"
     });
 
     toast.success("Membre modifié avec succès");
     resetForm();
     setIsEditModalOpen(false);
     setEditingMember(null);
+    setImageFile(null);
+    setImagePreview("");
   };
 
-  const handleDeleteMember = (id: number) => {
+  const handleDeleteMember = (id: string) => {
     if (confirm("Êtes-vous sûr de vouloir supprimer ce membre ?")) {
       onDeleteMember(id);
       toast.success("Membre supprimé avec succès");
@@ -285,7 +310,7 @@ const TeamManagement = ({
               <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-3">
                   <img
-                    src={member.image}
+                    src={`${BASE_URL}${member.image}`}
                     alt={member.name}
                     className="w-12 h-12 rounded-full object-cover"
                   />
@@ -314,7 +339,7 @@ const TeamManagement = ({
             </CardHeader>
             <CardContent className="space-y-2">
               <p className="text-sm text-gray-600 line-clamp-2">{member.description}</p>
-              
+
               <div className="space-y-1">
                 <div className="flex items-center space-x-2 text-xs">
                   <Mail className="w-3 h-3 text-gray-400" />

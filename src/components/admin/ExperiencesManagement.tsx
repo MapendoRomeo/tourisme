@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,9 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Save, X, Clock, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ImageUpload } from "@/components/ui/image-upload";
+import { apiService, BASE_URL } from "@/services/api";
 
 interface Experience {
-  id: number;
+  id: string;
   title: string;
   description: string;
   price: number;
@@ -24,19 +25,19 @@ interface Experience {
 interface ExperiencesManagementProps {
   experiences: Experience[];
   onAddExperience: (experience: Omit<Experience, 'id'>) => void;
-  onUpdateExperience: (id: number, experience: Omit<Experience, 'id'>) => void;
-  onDeleteExperience: (id: number) => void;
+  onUpdateExperience: (id: string, experience: Omit<Experience, 'id'>) => void;
+  onDeleteExperience: (id: string) => void;
 }
 
-const ExperiencesManagement = ({ 
-  experiences, 
-  onAddExperience, 
-  onUpdateExperience, 
-  onDeleteExperience 
+const ExperiencesManagement = ({
+  experiences,
+  onAddExperience,
+  onUpdateExperience,
+  onDeleteExperience
 }: ExperiencesManagementProps) => {
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -44,9 +45,11 @@ const ExperiencesManagement = ({
     duration: '',
     maxParticipants: 1,
     category: '',
-    image: '/placeholder.svg',
+    image: '',
     includes: ['']
   });
+  const [mainImageFile, setMainImageFile] = useState<File | null>(null);
+  const [mainImagePreview, setMainImagePreview] = useState<string>(formData.image);
 
   const categories = ['Gastronomie', 'Culture', 'Nature', 'Sport', 'Détente', 'Aventure'];
 
@@ -58,12 +61,20 @@ const ExperiencesManagement = ({
       duration: '',
       maxParticipants: 1,
       category: '',
-      image: '/placeholder.svg',
+      image: '',
       includes: ['']
     });
+    setMainImageFile(null);
+    setMainImagePreview('');
   };
 
-  const handleSubmit = () => {
+  // Fonction d'upload
+  const uploadImageToDb = async (file: File) => {
+    const response = await apiService.uploadFile(file, '/images/upload');
+    return response.data.imageUrl; // ou response.data.url selon ton backend
+  };
+
+  const handleSubmit = async () => {
     if (!formData.title || !formData.description || !formData.category || !formData.duration) {
       toast({
         title: "Erreur",
@@ -73,8 +84,14 @@ const ExperiencesManagement = ({
       return;
     }
 
+    let imageUrl = formData.image;
+    if (mainImageFile) {
+      imageUrl = await uploadImageToDb(mainImageFile);
+    }
+
     const experienceData = {
       ...formData,
+      image: imageUrl,
       includes: formData.includes.filter(item => item.trim() !== '')
     };
 
@@ -109,9 +126,12 @@ const ExperiencesManagement = ({
     });
     setEditingId(experience.id);
     setIsAdding(false);
+
+    setMainImagePreview(`${BASE_URL}${experience.image}`);
+    setMainImageFile(null);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     onDeleteExperience(id);
     toast({
       title: "Expérience supprimée",
@@ -147,6 +167,16 @@ const ExperiencesManagement = ({
     }));
   };
 
+  const handleMainImageSelect = (file: File) => {
+    setMainImageFile(file);
+    setMainImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleMainImageRemove = () => {
+    setMainImageFile(null);
+    setMainImagePreview("");
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -157,8 +187,8 @@ const ExperiencesManagement = ({
               Ajoutez et modifiez les expériences proposées
             </CardDescription>
           </div>
-          <Button 
-            onClick={() => setIsAdding(true)} 
+          <Button
+            onClick={() => setIsAdding(true)}
             className="flex items-center gap-2"
             disabled={isAdding || editingId !== null}
           >
@@ -231,12 +261,12 @@ const ExperiencesManagement = ({
                 />
               </div>
               <div>
-                <Label htmlFor="image">Image URL</Label>
-                <Input
-                  id="image"
-                  value={formData.image}
-                  onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
-                  placeholder="URL de l'image"
+                <Label>Image principale</Label>
+                <ImageUpload
+                  preview={mainImagePreview}
+                  onImageSelect={handleMainImageSelect}
+                  onImageRemove={handleMainImageRemove}
+                  className="mb-2"
                 />
               </div>
               <div className="md:col-span-2">
@@ -302,8 +332,8 @@ const ExperiencesManagement = ({
           {experiences.map((experience) => (
             <div key={experience.id} className="flex items-start justify-between p-4 border rounded-lg">
               <div className="flex gap-4">
-                <img 
-                  src={experience.image} 
+                <img
+                  src={`${BASE_URL}${experience.image}`}
                   alt={experience.title}
                   className="w-16 h-16 object-cover rounded-md"
                 />
@@ -332,17 +362,17 @@ const ExperiencesManagement = ({
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
+                <Button
+                  size="sm"
+                  variant="outline"
                   onClick={() => handleEdit(experience)}
                   disabled={isAdding || editingId !== null}
                 >
                   <Edit className="w-4 h-4" />
                 </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
+                <Button
+                  size="sm"
+                  variant="outline"
                   onClick={() => handleDelete(experience.id)}
                 >
                   <Trash2 className="w-4 h-4" />

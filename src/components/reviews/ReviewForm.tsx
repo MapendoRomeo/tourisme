@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,8 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Star, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import QuickLoginModal from "@/components/auth/QuickLoginModal";
+import { apiService } from "@/services/api";
 
 interface ReviewFormProps {
   onClose?: () => void;
@@ -24,19 +25,27 @@ const ReviewForm = ({ onClose, onSubmit }: ReviewFormProps) => {
   const { user, isAuthenticated } = useAuth();
 
   const [formData, setFormData] = useState({
-    fullName: user?.fullName || "",
+    name: user?.fullName || "",
     email: user?.email || "",
     attraction: "",
     title: "",
     comment: ""
   });
+  const [attractions, setAttractions] = useState([])
 
-  const attractions = [
-    "Vieux Port",
-    "Plage de Pampelonne",
-    "Citadelle de Saint-Tropez",
-    "Place des Lices"
-  ];
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const [attractionData] = await Promise.all([
+          apiService.getAttractions(),
+        ]);
+        setAttractions(attractionData);
+      } catch {
+        toast({ title: "Erreur", description: "Impossible de charger les données administrateur.", variant: "destructive" });
+      }
+    };
+    fetchAll();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,8 +64,46 @@ const ReviewForm = ({ onClose, onSubmit }: ReviewFormProps) => {
       });
       return;
     }
-    onSubmit({ ...formData, rating })
+
+    setIsSubmitting(true);
+
+    
+
+    const newReview = {
+      id: Date.now(),
+      user: formData.name || user?.fullName,
+      avatar: (formData.name || user?.fullName)?.charAt(0).toUpperCase(),
+      attraction: formData.attraction,
+      rating,
+      title: formData.title,
+      comment: formData.comment,
+      date: new Date().toISOString().split('T')[0],
+      likes: 0,
+      verified: false,
+      status: 'pending'
+    };
+
+    if (onSubmit) {
+      onSubmit(newReview);
+    }
+
+    toast({
+      title: "Avis soumis !",
+      description: "Votre avis a été envoyé et sera publié après modération.",
+    });
+
+    // Reset form
+    setFormData({
+      name: user?.fullName || "",
+      email: user?.email || "",
+      attraction: "",
+      title: "",
+      comment: ""
+    });
+    setRating(0);
     setIsSubmitting(false);
+
+    if (onClose) onClose();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -72,7 +119,7 @@ const ReviewForm = ({ onClose, onSubmit }: ReviewFormProps) => {
     if (user) {
       setFormData(prev => ({
         ...prev,
-        fullName: user.fullName,
+        name: user.fullName,
         email: user.email
       }));
     }
@@ -102,7 +149,7 @@ const ReviewForm = ({ onClose, onSubmit }: ReviewFormProps) => {
                   id="name"
                   name="name"
                   placeholder="Votre nom"
-                  value={formData.fullName}
+                  value={formData.name}
                   onChange={handleInputChange}
                   required
                   disabled={isSubmitting || (isAuthenticated && !!user?.fullName)}
@@ -136,8 +183,8 @@ const ReviewForm = ({ onClose, onSubmit }: ReviewFormProps) => {
                 </SelectTrigger>
                 <SelectContent>
                   {attractions.map((attraction) => (
-                    <SelectItem key={attraction} value={attraction}>
-                      {attraction}
+                    <SelectItem key={attraction.id} value={attraction.id}>
+                      {attraction.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

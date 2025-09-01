@@ -1,198 +1,267 @@
-import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useState, useEffect, useRef } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
 import AttractionsManagement from "@/components/admin/AttractionsManagement";
 import AccommodationsManagement from "@/components/admin/AccommodationsManagement";
 import TeamManagement from "@/components/admin/TeamManagement";
+import ExperiencesManagement from "@/components/admin/ExperiencesManagement";
+import BookingsManagement from "@/components/admin/BookingsManagement";
+import ReviewsManagement from "@/components/admin/ReviewsManagement";
+import UsersManagement from "@/components/admin/UsersManagement";
 import AdminMobileNav from "@/components/admin/AdminMobileNav";
+import { apiService, AdminReview, AdminUser, Attraction, Accommodation } from '@/services/api';
+import { useToast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
+import { Link } from "react-router-dom";
+import { LogOut } from "lucide-react";
+
+interface AdminStats {
+  users: number;
+  monthlyRevenue: number;
+  bookings: number;
+}
+
+
+interface AdminBooking {
+  id: string;
+  user: string;
+  email: string;
+  experience: string;
+  date: string;
+  time: string;
+  participants: number;
+  price: number;
+  status: string;
+  createdAt: string;
+}
+
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
+  const { toast } = useToast();
+  const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState("stats");
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [stats, setStats] = useState<AdminStats>({ users: 0, monthlyRevenue: 0, bookings: 0 });
+  const [reviews, setReviews] = useState<AdminReview[]>([]);
+  const [experiences, setExperiences] = useState<any[]>([]);
+  const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
+  const [attractions, setAttractions] = useState<Attraction[]>([]);
+  const [teamMembers, setTeamMembers] = useState<any[]>([[]]);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [autoApproveReviews, setAutoApproveReviews] = useState<boolean>(false);
 
-  const [stats, setStats] = useState({
-    totalUsers: 120,
-    totalBookings: 350,
-    monthlyRevenue: 15000,
-  });
-
-  const [attractions, setAttractions] = useState([
-    {
-      id: 1,
-      name: "Vieux Port",
-      description: "Le cœur historique de Saint-Tropez avec ses yachts luxueux et ses cafés emblématiques.",
-      longDescription: "Le Vieux Port de Saint-Tropez est l'âme de la ville. Depuis des siècles, ce port de pêche authentique accueille les visiteurs dans une atmosphère unique mêlant tradition provençale et glamour international. Promenez-vous le long des quais pavés, admirez les yachts luxueux amarrés à quelques mètres des pointus traditionnels, et imprégnez-vous de l'ambiance si particulière de ce lieu mythique.",
-      location: "Centre-ville",
-      category: "Historique",
-      image: "https://images.unsplash.com/photo-1527004760525-7725fc034884?w=800&h=600&fit=crop",
-      gallery: [
-        "https://images.unsplash.com/photo-1527004760525-7725fc034884?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800&h=600&fit=crop"
-      ],
-      rating: 4.8,
-      reviewCount: 1500,
-      duration: "2-3h",
-      coordinates: { lat: 43.2677, lng: 6.6370 },
-      openingHours: "24h/24",
-      price: "Gratuit",
-      highlights: [
-        "Architecture provençale authentique",
-        "Yachts de luxe",
-        "Cafés et restaurants emblématiques",
-        "Marché aux poissons matinal"
-      ],
-      tips: [
-        "Meilleure visite tôt le matin ou en fin d'après-midi",
-        "Réservez votre table en terrasse à l'avance",
-        "Parking payant en centre-ville"
-      ]
-    },
-    {
-      id: 2,
-      name: "Plage de Pampelonne",
-      description: "5 km de sable fin et d'eaux cristallines, parfait pour se détendre au soleil.",
-      longDescription: "La plage de Pampelonne s'étend sur près de 5 kilomètres de sable fin doré, offrant l'une des plus belles étendues de la Côte d'Azur. Cette plage mythique, rendue célèbre par Brigitte Bardot dans les années 60, allie beauté naturelle et art de vivre à la française. Ses eaux cristallines d'un bleu azur contrastent magnifiquement avec le sable doré et la végétation méditerranéenne environnante.",
-      location: "Ramatuelle",
-      category: "Plage",
-      image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=600&fit=crop",
-      gallery: [
-        "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800&h=600&fit=crop"
-      ],
-      rating: 4.9,
-      reviewCount: 1200,
-      duration: "Journée",
-      coordinates: { lat: 43.2406, lng: 6.6814 },
-      openingHours: "Accessible 24h/24",
-      price: "Gratuit (clubs de plage payants)",
-      highlights: [
-        "5 km de sable fin",
-        "Eaux cristallines",
-        "Clubs de plage renommés",
-        "Sports nautiques"
-      ],
-      tips: [
-        "Arrivez tôt pour les meilleures places",
-        "Pensez à la crème solaire",
-        "Restaurants de plage pour le déjeuner"
-      ]
-    }
-  ]);
-
-  const [teamMembers, setTeamMembers] = useState([
-    {
-      id: 1,
-      name: "Marie Dubois",
-      role: "Directrice Générale",
-      description: "Passionnée de voyages depuis plus de 15 ans, Marie dirige notre équipe avec expertise et bienveillance.",
-      image: "/placeholder.svg",
-      email: "marie.dubois@villevoyage.com",
-      phone: "+33 1 23 45 67 89",
-      linkedin: "https://linkedin.com/in/marie-dubois",
-      twitter: "https://twitter.com/marie_dubois",
-      github: ""
-    },
-    {
-      id: 2,
-      name: "Pierre Martin",
-      role: "Guide Expert",
-      description: "Spécialiste des circuits culturels et historiques, Pierre vous fera découvrir les secrets les mieux gardés de notre région.",
-      image: "/placeholder.svg",
-      email: "pierre.martin@villevoyage.com",
-      phone: "+33 1 23 45 67 90",
-      linkedin: "https://linkedin.com/in/pierre-martin",
-      twitter: "",
-      github: ""
-    }
-  ]);
-
-  const [accommodations, setAccommodations] = useState([
-    {
-      id: 1,
-      name: "Hôtel de la Plage",
-      description: "Magnifique hôtel en bord de mer avec vue panoramique",
-      location: "Bord de mer",
-      type: "Hôtel",
-      price: 150,
-      image: "/placeholder.svg",
-      rating: 4.5,
-      amenities: ["WiFi", "Piscine", "Restaurant", "Spa"]
-    },
-    {
-      id: 2,
-      name: "Appartement Centre-ville",
-      description: "Appartement moderne au cœur de la ville",
-      location: "Centre-ville",
-      type: "Appartement",
-      price: 80,
-      image: "/placeholder.svg",
-      rating: 4.2,
-      amenities: ["WiFi", "Climatisation", "Parking"]
-    }
-  ]);
-
-  const handleAddAttraction = (attraction: any) => {
-    const newAttraction = {
-      ...attraction,
-      id: attractions.length + 1,
-      rating: 0,
-      reviewCount: 0
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const [reviewsData, userData, attractionData, experienceData, accommodationData, teamMembersData, bookingsData, autoApproveData] = await Promise.all([
+          apiService.getReviews(),
+          apiService.getUsers(),
+          apiService.getAttractions(),
+          apiService.getExperiences(),
+          apiService.getAccommodations(),
+          apiService.getTemMembers(),
+          apiService.getBookings(),
+          apiService.getAutoApprove()
+        ]);
+        setReviews(reviewsData);
+        setUsers(userData);
+        setAttractions(attractionData);
+        setExperiences(experienceData);
+        setAccommodations(accommodationData);
+        setTeamMembers(teamMembersData);
+        setBookings(bookingsData);
+        setAutoApproveReviews(autoApproveData.autoApproveReviews)
+      } catch {
+        toast({ title: "Erreur", description: "Impossible de charger les données administrateur.", variant: "destructive" });
+      }
     };
-    setAttractions(prev => [...prev, newAttraction]);
+    fetchAll();
+  }, []);
+
+
+  const toggleAutoApprove = async () => {
+    setAutoApproveReviews(!autoApproveReviews)
+    try {
+      const res = await apiService.updateAutoApprove(autoApproveReviews)
+      setAutoApproveReviews(res.autoApproveReviews)
+    } catch (err) {
+      toast({ title: "Erreur", description: "Impossible update config", variant: "destructive" });
+    }
+  }
+  const handleAddAttraction = async (attraction: any) => {
+    try {
+      await apiService.createAttraction(attraction);
+      const data = await apiService.getAttractions();
+      setAttractions(data);
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de crée l'attraction", variant: "destructive" });
+    }
   };
 
-  const handleUpdateAttraction = (id: number, updatedAttraction: any) => {
-    setAttractions(prev => prev.map(att =>
-      att.id === id ? { ...att, ...updatedAttraction } : att
-    ));
+  const handleUpdateAttraction = async (id: string, updatedAttraction: any) => {
+    try {
+      await apiService.updateAttraction(id, updatedAttraction);
+      const data = await apiService.getAttractions();
+      setAttractions(data);
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de mettre à jour l'attraction", variant: "destructive" });
+    }
   };
 
-  const handleDeleteAttraction = (id: number) => {
-    setAttractions(prev => prev.filter(att => att.id !== id));
+  const handleDeleteAttraction = async (id: string) => {
+    try {
+      await apiService.deleteAttraction(id);
+      setAttractions(prev => prev.filter(attraction => attraction.id !== id));
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de supprimer l'attraction", variant: "destructive" });
+    }
   };
 
-  const handleAddAccommodation = (accommodation: any) => {
-    const newAccommodation = {
-      ...accommodation,
-      id: accommodations.length + 1,
-      rating: 0
-    };
-    setAccommodations(prev => [...prev, newAccommodation]);
+  const handleAddAccommodation = async (accommodation: any) => {
+    try {
+      await apiService.createAccommodation(accommodation);
+      const data = await apiService.getAccommodations();
+      setAccommodations(data);
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de crée l'hébergement", variant: "destructive" });
+    }
   };
 
-  const handleUpdateAccommodation = (id: number, updatedAccommodation: any) => {
-    setAccommodations(prev => prev.map(acc =>
-      acc.id === id ? { ...acc, ...updatedAccommodation } : acc
-    ));
+  const handleUpdateAccommodation = async (id: string, updatedAccommodation: any) => {
+    try {
+      await apiService.updateAccommodation(id, updatedAccommodation);
+      const data = await apiService.getAccommodations();
+      setAccommodations(data);
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de mettre à jour l'hébergement", variant: "destructive" });
+    }
   };
 
-  const handleDeleteAccommodation = (id: number) => {
-    setAccommodations(prev => prev.filter(acc => acc.id !== id));
+  const handleDeleteAccommodation = async (id: string) => {
+    try {
+      await apiService.deleteAccommodation(id);
+      const data = await apiService.getAccommodations();
+      setAccommodations(data);
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de supprimer l'hébergement", variant: "destructive" });
+    }
   };
 
-  const handleAddTeamMember = (member: any) => {
-    const newMember = {
-      ...member,
-      id: teamMembers.length + 1
-    };
-    setTeamMembers(prev => [...prev, newMember]);
+  const handleAddTeamMember = async (member: any) => {
+    try {
+      await apiService.createTemMember(member);
+      const data = await apiService.getTemMembers();
+      setTeamMembers(data);
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de créer le membre", variant: "destructive" });
+    }
   };
 
-  const handleUpdateTeamMember = (id: number, updatedMember: any) => {
-    setTeamMembers(prev => prev.map(member =>
-      member.id === id ? { ...member, ...updatedMember } : member
-    ));
+  const handleUpdateTeamMember = async (id: string, updatedMember: any) => {
+    try {
+      // Supposons que apiService.updateTemMember existe
+      await apiService.updateTemMember(id, updatedMember);
+      const data = await apiService.getTemMembers();
+      setTeamMembers(data);
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de mettre à jour le membre", variant: "destructive" });
+    }
+  };
+  const handleDeleteTeamMember = async (id: string) => {
+    try {
+      await apiService.deleteTemMember(id);
+      const data = await apiService.getTemMembers();
+      setTeamMembers(data);
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de supprimer le membre", variant: "destructive" });
+    }
   };
 
-  const handleDeleteTeamMember = (id: number) => {
-    setTeamMembers(prev => prev.filter(member => member.id !== id));
+  // Gestionnaires pour les expériences
+  const handleAddExperience = async (experience: any) => {
+    try {
+      await apiService.createExperience(experience);
+      const data = await apiService.getExperiences();
+      setExperiences(data);
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de crée l'expérience", variant: "destructive" });
+    }
   };
 
+  const handleUpdateExperience = async (id: string, updatedExperience: any) => {
+    try {
+      await apiService.updateExperience(id, updatedExperience);
+      const data = await apiService.getExperiences();
+      setExperiences(data);
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de mettre à jour l'expérience", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteExperience = async (id: string) => {
+    try {
+      await apiService.deleteExperience(id);
+      const data = await apiService.getExperiences();
+      setExperiences(data);
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de supprimer l'expérience", variant: "destructive" });
+    }
+  };
+
+  // Gestionnaires pour les réservations
+  const handleUpdateBooking = async (id: string, status: 'confirmed' | 'cancelled') => {
+    try {
+      await apiService.updateBookingStatus(id, status);
+      const data = await apiService.getBookings();
+      setBookings(data);
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de mettre à jour la réservation", variant: "destructive" });
+    }
+  };
+
+  // Gestionnaires pour les avis
+  const handleUpdateReview = async (id: string, status: 'approved' | 'rejected') => {
+    try {
+      await apiService.updateReview(id, status)
+      const data = await apiService.getReviews();
+      setReviews(data);
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de mettre à jour l'avis.", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteReview = async (id: string) => {
+    try {
+      await apiService.deleteReview(id);
+      const data = await apiService.getReviews();
+      setReviews(data);
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de mettre à jour l'avis.", variant: "destructive" });
+    }
+  };
+
+  // Gestionnaires pour les utilisateurs
+  const handleUpdateUser = async (id: string, updatedUserRole: 'superAdmin' | 'admin' | 'user') => {
+    try {
+      await apiService.updateUserRole(id, updatedUserRole)
+      const data = await apiService.getUsers()
+      setUsers(data)
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de mettre à jour le role", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteUser = async (id: string) => {
+    try {
+      await apiService.deleteUser(id);
+      const data = await apiService.getUsers();
+      setUsers(data);
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de supprimer l'utilisateur", variant: "destructive" });
+    }
+  };
+  if (loading) <p className="">chargement des données...</p>
   if (!user?.isAdmin && !user?.isSuperAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -206,9 +275,20 @@ const AdminDashboard = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Tableau de bord administrateur</h1>
-        <p className="text-gray-600">Bienvenue {user.fullName}</p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Tableau de bord administrateur</h1>
+          <p className="text-gray-600">Bienvenue {user.fullName}</p>
+        </div>
+
+        {/* Bouton retour accueil */}
+        <Link
+          to="/"
+          className="inline-flex items-center px-4 py-2 rounded-lg bg-ocean-500 text-white hover:bg-ocean-600 transition-colors"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Voir le site
+        </Link>
       </div>
 
       {/* Navigation mobile */}
@@ -216,8 +296,9 @@ const AdminDashboard = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         {/* Navigation desktop - cachée sur mobile */}
-        <TabsList className="hidden md:grid w-full grid-cols-7">
+        <TabsList className="hidden md:grid w-full grid-cols-8">
           <TabsTrigger value="stats">Statistiques</TabsTrigger>
+          <TabsTrigger value="users">Utilisateurs</TabsTrigger>
           <TabsTrigger value="attractions">Attractions</TabsTrigger>
           <TabsTrigger value="experiences">Expériences</TabsTrigger>
           <TabsTrigger value="accommodations">Hébergements</TabsTrigger>
@@ -233,7 +314,7 @@ const AdminDashboard = () => {
                 <CardTitle>Total des utilisateurs</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalUsers}</div>
+                <div className="text-2xl font-bold">{stats.users}</div>
               </CardContent>
             </Card>
             <Card>
@@ -241,7 +322,7 @@ const AdminDashboard = () => {
                 <CardTitle>Total des réservations</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalBookings}</div>
+                <div className="text-2xl font-bold">{stats.bookings}</div>
               </CardContent>
             </Card>
             <Card>
@@ -249,10 +330,37 @@ const AdminDashboard = () => {
                 <CardTitle>Revenu mensuel</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${stats.monthlyRevenue}</div>
+                <div className="text-2xl font-bold">{stats.monthlyRevenue}€</div>
               </CardContent>
             </Card>
           </div>
+
+          {/* Section Paramètres des avis */}
+          <div className="mt-8 flex flex-col items-center">
+            <div className="mb-4 text-lg font-semibold text-ocean-900">Paramètres des avis</div>
+            <div className="flex items-center gap-4">
+              <Switch
+                checked={autoApproveReviews}
+                onCheckedChange={toggleAutoApprove}
+                className={`data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-red-500 transition-colors`}
+                id="auto-approve-toggle"
+              />
+              <label htmlFor="auto-approve-toggle" className="font-medium text-gray-700">
+                {autoApproveReviews ? "Auto-approbation activée" : "Auto-approbation désactivée"}
+              </label>
+            </div>
+            <div className="mt-2 text-sm text-gray-500">
+              Les nouveaux avis seront {autoApproveReviews ? "automatiquement approuvés." : "validés manuellement par un administrateur."}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="users">
+          <UsersManagement
+            users={users}
+            onUpdateUser={handleUpdateUser}
+            onDeleteUser={handleDeleteUser}
+          />
         </TabsContent>
 
         <TabsContent value="attractions">
@@ -265,10 +373,12 @@ const AdminDashboard = () => {
         </TabsContent>
 
         <TabsContent value="experiences">
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Gestion des expériences</h2>
-            <p>Ici, vous pourrez gérer les expériences offertes aux utilisateurs.</p>
-          </div>
+          <ExperiencesManagement
+            experiences={experiences}
+            onAddExperience={handleAddExperience}
+            onUpdateExperience={handleUpdateExperience}
+            onDeleteExperience={handleDeleteExperience}
+          />
         </TabsContent>
 
         <TabsContent value="accommodations">
@@ -290,17 +400,18 @@ const AdminDashboard = () => {
         </TabsContent>
 
         <TabsContent value="bookings">
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Gestion des réservations</h2>
-            <p>Ici, vous pourrez gérer les réservations effectuées par les utilisateurs.</p>
-          </div>
+          <BookingsManagement
+            bookings={bookings}
+            onUpdateBooking={handleUpdateBooking}
+          />
         </TabsContent>
 
         <TabsContent value="reviews">
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Gestion des avis</h2>
-            <p>Ici, vous pourrez gérer les avis laissés par les utilisateurs.</p>
-          </div>
+          <ReviewsManagement
+            reviews={reviews}
+            onUpdateReview={handleUpdateReview}
+            onDeleteReview={handleDeleteReview}
+          />
         </TabsContent>
       </Tabs>
     </div>

@@ -1,28 +1,14 @@
 
 import { useState, useEffect } from "react";
-import axios from "@/api/axios";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Star, MessageSquare, ThumbsUp, Calendar, ArrowRight } from "lucide-react";
-import ReviewForm from "./ReviewForm";
 import { Link } from "react-router-dom";
+import ReviewForm from "./ReviewForm";
+import { apiService } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
-
-interface Review {
-  id: number;
-  user: string;
-  avatar: string;
-  attraction: string;
-  rating: number;
-  title: string;
-  comment: string;
-  date: string;
-  likes: number;
-  verified: boolean;
-  status: string;
-}
 
 const ReviewsSection = () => {
   const [selectedAttraction, setSelectedAttraction] = useState("all");
@@ -30,24 +16,26 @@ const ReviewsSection = () => {
   const { toast } = useToast();
 
   // State for managing reviews
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviews, setReviews] = useState([])
+  const [attractions, setAttractions] = useState([])
 
   useEffect(() => {
-    const fetchReviews = async () => {
+    const fetchAll = async () => {
       try {
-        const res = await axios.get("/reviews");
-        setReviews(res.data);
+        const [reviewsData, attractionData] = await Promise.all([
+          apiService.getReviews(),
+          apiService.getAttractions(),
+        ]);
+        setReviews(reviewsData);
+        setAttractions(attractionData);
       } catch {
-        toast({ title: "Erreur", description: "Impossible de charger les avis.", variant: "destructive" });
+        toast({ title: "Erreur", description: "Impossible de charger les données administrateur.", variant: "destructive" });
       }
     };
-    fetchReviews();
+    fetchAll();
   }, []);
-
-  const attractions = ["all", "Vieux Port", "Plage de Pampelonne", "Citadelle de Saint-Tropez", "Place des Lices"];
-
   // Only show approved reviews
-  const approvedReviews = reviews?.filter(review => review.status === 'approved');
+  const approvedReviews = reviews.filter(review => review.status === 'approved');
   const filteredReviews = selectedAttraction === "all"
     ? approvedReviews
     : approvedReviews.filter(review => review.attraction === selectedAttraction);
@@ -58,33 +46,26 @@ const ReviewsSection = () => {
 
   const handleNewReview = async (newReview: any) => {
     try {
-      await axios.post("/reviews", {
-        avatar: newReview.avatar,
-        attraction: newReview.attraction,
-        rating: newReview.rating,
-        title: newReview.title,
-        comment: newReview.comment,
-        status: newReview.satus,
-      });
-      toast({ title: "Avis soumis !", description: "Votre avis a été envoyé et sera publié après modération." });
-      // Recharger la liste des avis
-      const res = await axios.get("/reviews");
-      setReviews(res.data);
+      await apiService.createReview(newReview)
       setIsDialogOpen(false);
     } catch {
-      toast({ title: "Erreur", description: "Impossible d'envoyer l'avis.", variant: "destructive" });
+
     }
+
   };
 
-  const handleLike = async (reviewId: number) => {
-    try {
-      await axios.post(`/reviews/${reviewId}/like`);
-      const res = await axios.get("/reviews");
-      setReviews(res.data);
-      toast({ title: "Merci !", description: "Votre like a été pris en compte." });
-    } catch {
-      toast({ title: "Erreur", description: "Impossible d'enregistrer le like.", variant: "destructive" });
-    }
+  const handleLike = (reviewId: number) => {
+    setReviews(prev =>
+      prev.map(review =>
+        review.id === reviewId
+          ? { ...review, likes: review.likes + 1 }
+          : review
+      )
+    );
+    toast({
+      title: "Merci !",
+      description: "Votre like a été pris en compte.",
+    });
   };
 
   return (
@@ -118,28 +99,40 @@ const ReviewsSection = () => {
 
         {/* Filtres */}
         <div className="flex flex-wrap justify-center gap-2 mb-8">
+          {/* Bouton "Toutes" */}
+          <Button
+            variant={selectedAttraction === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedAttraction("all")}
+            className={selectedAttraction === "all" ? "bg-ocean-500 hover:bg-ocean-600" : ""}
+          >
+            Toutes
+          </Button>
+
+          {/* Boutons pour chaque attraction */}
           {attractions.map((attraction) => (
             <Button
-              key={attraction}
-              variant={selectedAttraction === attraction ? "default" : "outline"}
+              key={attraction.id}
+              variant={selectedAttraction === attraction.id ? "default" : "outline"}
               size="sm"
-              onClick={() => setSelectedAttraction(attraction)}
-              className={selectedAttraction === attraction ? "bg-ocean-500 hover:bg-ocean-600" : ""}
+              onClick={() => setSelectedAttraction(attraction.id)}
+              className={selectedAttraction === attraction.id ? "bg-ocean-500 hover:bg-ocean-600" : ""}
             >
-              {attraction === "all" ? "Toutes" : attraction}
+              {attraction.name}
             </Button>
           ))}
         </div>
 
-        {/* Liste des avis */}
+        {/* Liste des avis - Ne montrer que les 4 premiers */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {filteredReviews.map((review) => (
+          {filteredReviews.slice(0, 4).map((review) => (
             <Card key={review.id} className="hover:shadow-lg transition-shadow duration-300">
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-ocean-500 rounded-full flex items-center justify-center text-white font-semibold">
                     {review.avatar}
                   </div>
+
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h4 className="font-semibold text-ocean-900">{review.user}</h4>
@@ -149,6 +142,7 @@ const ReviewsSection = () => {
                         </Badge>
                       )}
                     </div>
+
                     <div className="flex items-center gap-2 mb-2">
                       <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => (
@@ -162,10 +156,12 @@ const ReviewsSection = () => {
                         {review.attraction}
                       </span>
                     </div>
+
                     <h5 className="font-medium text-ocean-900 mb-2">{review.title}</h5>
                     <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
                       {review.comment}
                     </p>
+
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
@@ -188,7 +184,7 @@ const ReviewsSection = () => {
           ))}
         </div>
 
-        {/* CTA pour ajouter un avis */}
+        {/* CTA pour voir plus et ajouter un avis */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link to="/reviews">
             <Button variant="outline" className="border-ocean-500 text-ocean-600 hover:bg-ocean-50">
@@ -196,6 +192,7 @@ const ReviewsSection = () => {
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </Link>
+
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button className="btn-cta">

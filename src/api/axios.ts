@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // URL de base du backend (ajuste selon ton environnement)
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://tourisme-khei.onrender.com/api';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 // Création d’une instance Axios
 const axiosInstance = axios.create({

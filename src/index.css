@@ -2,8 +2,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-
 /* Design system definition with tourism-inspired colors */
 
 @layer base {

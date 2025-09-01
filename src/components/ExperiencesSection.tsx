@@ -1,117 +1,112 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { Sailboat, Camera, Wine, Utensils, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import axios from "@/api/axios";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
-import QuickLoginModal from "@/components/auth/QuickLoginModal";
+import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
-
-interface Experience {
-  id: number;
-  title: string;
-  description: string;
-  price: string;
-  duration: string;
-  image: string;
-}
+import QuickLoginModal from "@/components/auth/QuickLoginModal";
+import { apiService, BASE_URL } from "@/services/api";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 const ExperiencesSection = () => {
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
   const [bookingLoading, setBookingLoading] = useState<number | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [experiences, setExperiences] = useState<any[]>([]);
   const [showBookingModal, setShowBookingModal] = useState(false);
-  const [selectedExperience, setSelectedExperience] = useState<Experience | null>(null);
-  const [nbPersonnes, setNbPersonnes] = useState(1);
-  const [date, setDate] = useState("");
+  const [selectedExperience, setSelectedExperience] = useState<any | null>(null);
+  const [bookingDate, setBookingDate] = useState("");
+  const [bookingParticipants, setBookingParticipants] = useState(1);
+  const [bookingTime, setBookingTime] = useState("");
 
-  const [experiences, setExperiences] = useState<Experience[]>([
-    {
-      id: 1,
-      title: "Croisière au coucher du soleil",
-      description: "Naviguez le long de la côte d'Azur et admirez un coucher de soleil inoubliable.",
-      price: "À partir de 85€",
-      duration: "3 heures",
-      image: "https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?w=600&h=400&fit=crop"
-    },
-    {
-      id: 2,
-      title: "Tour photographique",
-      description: "Capturez les plus beaux sites avec un photographe professionnel local.",
+  // Charger les expériences depuis l'API
+  useEffect(() => {
+    const fetchExperiences = async () => {
+      try {
+        const data = await apiService.getExperiences();
+        setExperiences(data);
+      } catch {
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les expériences.",
+          variant: "destructive"
+        });
+      }
+    };
+    fetchExperiences();
+  }, []);
 
-      price: "À partir de 120€",
-      duration: "2 heures",
-      image: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=600&h=400&fit=crop"
-    },
-    {
-      id: 3,
-      title: "Dégustation de vins",
-      description: "Découvrez les vins rosés de Provence dans les vignobles environnants.",
-
-      price: "À partir de 65€",
-      duration: "4 heures",
-      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop"
-    },
-    {
-      id: 4,
-      title: "Cours de cuisine provençale",
-      description: "Apprenez à cuisiner les spécialités locales avec un chef renommé.",
-
-      price: "À partir de 95€",
-      duration: "3 heures",
-      image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&h=400&fit=crop"
-    }
-  ]);
-  const [loadingExp, setLoadingExp] = useState(false);
-
-  // useEffect désactivé pour les données de test
-
+  // Ouvre le modal de réservation
   const handleBookNow = (experience: any) => {
     if (!isAuthenticated) {
       setShowLoginModal(true);
       return;
     }
     setSelectedExperience(experience);
+    setBookingDate("");
+    setBookingParticipants(1);
+    setBookingTime("");
     setShowBookingModal(true);
-    setNbPersonnes(1);
-    setDate("");
   };
 
-  const handleValidateBooking = async () => {
+  // Validation et envoi de la réservation
+  const handleConfirmBooking = async () => {
+    if (!bookingDate || new Date(bookingDate) < new Date()) {
+      toast({
+        title: "Date invalide",
+        description: "Veuillez choisir une date à venir.",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (!bookingTime) {
+      toast({
+        title: "Heure manquante",
+        description: "Veuillez choisir une heure.",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (bookingParticipants < 1) {
+      toast({
+        title: "Nombre de participants invalide",
+        description: "Veuillez choisir au moins 1 participant.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setBookingLoading(selectedExperience.id);
+    // Appel API pour réserver
     try {
-      const res = await axios.post("/reservations", {
-        experience: selectedExperience.title,
-        time: selectedExperience.duration,
-        participants: nbPersonnes,
-        date,
-        price: getTotalPrice()
+      await apiService.post("/bookings", {
+        experience: selectedExperience.id,
+        date: bookingDate,
+        time: bookingTime,
+        participants: bookingParticipants,
+        price: selectedExperience.price * bookingParticipants,
+        user: user?._id
       });
       toast({
-        title: "Réservation validée",
-        description: res.data.message || `Réservation pour ${nbPersonnes} personne(s) le ${date} à l'expérience "${selectedExperience.title}". Prix total: ${getTotalPrice()} €`,
+        title: "Réservation initiée",
+        description: `Votre demande de réservation pour "${selectedExperience.title}" a été envoyée.`,
       });
-    } catch (err: any) {
+    } catch {
       toast({
         title: "Erreur",
-        description: err?.response?.data?.message || "Erreur lors de la réservation.",
+        description: "La réservation a échoué.",
         variant: "destructive"
       });
     }
+
     setBookingLoading(null);
     setShowBookingModal(false);
     setSelectedExperience(null);
-  };
-
-  const getTotalPrice = () => {
-    if (!selectedExperience) return 0;
-    // Extraire le prix de l'expérience (ex: "À partir de 85€")
-    const match = selectedExperience.price.match(/(\d+)/);
-    const prixUnitaire = match ? parseInt(match[1], 10) : 0;
-    return prixUnitaire * nbPersonnes;
+    setBookingTime("");
   };
 
   const handleLoginSuccess = () => {
@@ -131,63 +126,64 @@ const ExperiencesSection = () => {
               Expériences Authentiques
             </h2>
             <p className="section-subtitle">
-              Vivez Saint-Tropez comme un local avec nos expériences uniques
+              Vivez Idjwi comme un local avec nos expériences uniques
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {loadingExp ? (
-              <div className="col-span-2 text-center py-8">Chargement des expériences...</div>
-            ) : experiences.length === 0 ? (
-              <div className="col-span-2 text-center py-8">Aucune expérience disponible.</div>
-            ) : (
-              experiences.map((experience) => (
-                <Card key={experience.id} className="group hover:shadow-2xl transition-all duration-500 overflow-hidden">
-                  <div className="flex flex-col md:flex-row">
-                    <div className="md:w-1/2 relative overflow-hidden">
-                      <img
-                        src={experience.image}
-                        alt={experience.title}
-                        className="w-full h-64 md:h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                    </div>
-                    <CardContent className="md:w-1/2 p-6 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center mb-4">
-                          <div className="text-ocean-500 mr-3">
-                          </div>
-                          <h3 className="font-display text-xl font-semibold text-ocean-900">
-                            {experience.title}
-                          </h3>
-                        </div>
-                        <p className="text-muted-foreground mb-6 leading-relaxed">
-                          {experience.description}
-                        </p>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <div className="text-sm text-muted-foreground">
-                            Durée: {experience.duration}
-                          </div>
-                          <div className="font-semibold text-sunset-600">
-                            {experience.price}
-                          </div>
-                        </div>
-                        <Button
-                          className="w-full btn-cta"
-                          onClick={() => handleBookNow(experience)}
-                          disabled={bookingLoading === experience.id}
-                        >
-                          {bookingLoading === experience.id ? "Réservation..." : !isAuthenticated ? "Se connecter et réserver" : "Réserver maintenant"}
-                        </Button>
-                      </div>
-                    </CardContent>
+            {experiences.map((experience) => (
+              <Card key={experience.id} className="group hover:shadow-2xl transition-all duration-500 overflow-hidden">
+                <div className="flex flex-col md:flex-row">
+                  <div className="md:w-1/2 relative overflow-hidden">
+                    <img
+                      src={`${BASE_URL}${experience.image}`}
+                      alt={experience.title}
+                      className="w-full h-64 md:h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                   </div>
-                </Card>
-              ))
-            )}
+
+                  <CardContent className="md:w-1/2 p-6 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center mb-4">
+                        <div className="text-ocean-500 mr-3">
+                          {/* Si tu as une icône dans l'API, sinon retire */}
+                          {experience.icon || <Sailboat className="w-8 h-8" />}
+                        </div>
+                        <h3 className="font-display text-xl font-semibold text-ocean-900">
+                          {experience.title}
+                        </h3>
+                      </div>
+
+                      <p className="text-muted-foreground mb-6 leading-relaxed">
+                        {experience.description}
+                      </p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <div className="text-sm text-muted-foreground">
+                          Durée: {experience.duration}
+                        </div>
+                        <div className="font-semibold text-sunset-600">
+                          {experience.price}
+                        </div>
+                      </div>
+
+                      <Button
+                        className="w-full btn-cta"
+                        onClick={() => handleBookNow(experience)}
+                        disabled={bookingLoading === experience.id}
+                      >
+                        {bookingLoading === experience.id ? "Réservation..." : !isAuthenticated ? "Se connecter et réserver" : "Réserver maintenant"}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </div>
+              </Card>
+            ))}
           </div>
+
           <div className="text-center mt-12">
             <Link to="/experiences">
               <Button className="btn-cta">
@@ -199,49 +195,53 @@ const ExperiencesSection = () => {
         </div>
       </section>
 
-      {/* Modal de réservation personnalisé */}
-      {showBookingModal && selectedExperience && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg min-w-[320px]">
-            <h3 className="text-lg font-bold mb-4">Réserver : {selectedExperience.title}</h3>
-            <label className="block mb-2">
-              Nombre de personnes :
-              <input
+      {/* Modal de réservation */}
+      <Dialog open={showBookingModal} onOpenChange={setShowBookingModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Réserver "{selectedExperience?.title}"</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Date de l'expérience</Label>
+              <Input
+                type="date"
+                value={bookingDate}
+                min={new Date().toISOString().split("T")[0]}
+                onChange={e => setBookingDate(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label>Heure</Label>
+              <Input
+                type="time"
+                value={bookingTime}
+                onChange={e => setBookingTime(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label>Nombre de participants</Label>
+              <Input
                 type="number"
                 min={1}
-                value={nbPersonnes}
-                onChange={e => setNbPersonnes(Number(e.target.value))}
-                className="border rounded px-2 py-1 w-full mt-1"
+                value={bookingParticipants}
+                onChange={e => setBookingParticipants(Number(e.target.value))}
               />
-            </label>
-            <label className="block mb-2">
-              Date de la visite :
-              <input
-                type="date"
-                value={date}
-                onChange={e => setDate(e.target.value)}
-                className="border rounded px-2 py-1 w-full mt-1"
-              />
-            </label>
-            <div className="mb-4">Prix total : <span className="font-semibold">{getTotalPrice()} €</span></div>
-            <div className="flex gap-2">
-              <Button
-                className="px-4 py-2 bg-green-600 text-white rounded"
-                onClick={handleValidateBooking}
-                disabled={!date || bookingLoading === selectedExperience.id}
-              >
-                {bookingLoading === selectedExperience.id ? "Réservation..." : "Valider la réservation"}
-              </Button>
-              <Button
-                className="px-4 py-2 bg-gray-400 text-white rounded"
-                onClick={() => setShowBookingModal(false)}
-              >
-                Annuler
-              </Button>
+            </div>
+            <div className="font-semibold text-sunset-600">
+              Prix total : {selectedExperience ? bookingParticipants * selectedExperience.price : 0} €
             </div>
           </div>
-        </div>
-      )}
+          <DialogFooter>
+            <Button
+              onClick={handleConfirmBooking}
+              disabled={bookingLoading === selectedExperience?.id}
+            >
+              {bookingLoading === selectedExperience?.id ? "Réservation..." : "Confirmer la réservation"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <QuickLoginModal
         isOpen={showLoginModal}

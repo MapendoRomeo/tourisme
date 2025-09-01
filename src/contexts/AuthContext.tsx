@@ -1,40 +1,36 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axios from "@/api/axios";
-
+import { createContext, useContext, useState, useEffect } from 'react';
+import { apiService } from '@/services/api';
 
 interface User {
+  _id?: string;
   id: string;
-  email: string;
   fullName: string;
+  email: string;
   isAdmin?: boolean;
   isSuperAdmin?: boolean;
 }
-
 interface AuthContextType {
   user: User | null;
+  loading: boolean;
+  isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  isAuthenticated: boolean;
-  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// ...données de test supprimées...
-
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState(null);
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null); // utilisateur connecté
   const [loading, setLoading] = useState(true);
 
+  // Charger l'utilisateur au démarrage si token existe
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          const res = await axios.get('/auth/me', {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setUser(res.data);
+          const data = await apiService.get<User>('/auth/me');
+          setUser(data);
         } catch (err) {
           console.error('Token invalide');
           localStorage.removeItem('token'); // très important
@@ -47,15 +43,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
     fetchUser();
   }, []);
+
+
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const res = await axios.post("/auth/login", { email, password });
-      if (!res.data) return false;
-      setUser(res.data.user);
-      localStorage.setItem('token', res.data.token);
+      const data = await apiService.post<{ token: string; user: User }>("/auth/login", { email, password });
+      console.log(data)
+      if (!data) return false;
+      setUser(data.user);
+      localStorage.setItem('token', data.token);
 
       // Redirection selon le rôle
-      if (res.data?.isAdmin || res.data?.isSuperAdmin) {
+      if (data?.user.isAdmin || data?.user.isSuperAdmin) {
         window.location.href = "/admin";
       } else {
         window.location.href = "/";
@@ -67,23 +66,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
-    setUser(null);
     localStorage.removeItem('token');
+    setUser(null);
   };
 
-  const isAuthenticated = user !== null;
+  const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+// Hook personnalisé pour utiliser le contexte
+export const useAuth = () => useContext(AuthContext);

@@ -7,7 +7,7 @@ import { Star, CheckCircle, XCircle, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Review {
-  id: number;
+  id: string;
   user: string;
   attraction: string;
   rating: number;
@@ -19,53 +19,42 @@ interface Review {
 
 interface ReviewsManagementProps {
   reviews: Review[];
-  onUpdateReview: (reviewId: number, status: 'approved' | 'rejected') => Promise<void>;
-  onDeleteReview: (reviewId: number) => Promise<void>;
+  onUpdateReview: (id: string, status: 'approved' | 'rejected') => void;
+  onDeleteReview: (id: string) => void;
 }
 
 const ReviewsManagement = ({ reviews, onUpdateReview, onDeleteReview }: ReviewsManagementProps) => {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
 
-  const filteredReviews: Review[] = Array.isArray(reviews)
-    ? (filter === 'all' ? reviews : reviews.filter(review => review.status === filter))
-    : [];
+  const filteredReviews = filter === 'all'
+    ? reviews
+    : reviews.filter(review => review.status === filter);
 
-  const handleApprove = async (reviewId: number) => {
-    setLoading(true);
-    try {
-      await onUpdateReview(reviewId, 'approved');
-      toast({ title: "Avis approuvé", description: "L'avis a été approuvé et sera visible publiquement." });
-    } catch {
-      toast({ title: "Erreur", description: "Impossible d'approuver l'avis.", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
+  const handleApprove = (reviewId: string) => {
+    onUpdateReview(reviewId, 'approved');
+    toast({
+      title: "Avis approuvé",
+      description: "L'avis a été approuvé et sera visible publiquement.",
+    });
   };
 
-  const handleReject = async (reviewId: number) => {
-    setLoading(true);
-    try {
-      await onUpdateReview(reviewId, 'rejected');
-      toast({ title: "Avis rejeté", description: "L'avis a été rejeté et ne sera pas visible publiquement.", variant: "destructive" });
-    } catch {
-      toast({ title: "Erreur", description: "Impossible de rejeter l'avis.", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
+  const handleReject = (reviewId: string) => {
+    onUpdateReview(reviewId, 'rejected');
+    toast({
+      title: "Avis rejeté",
+      description: "L'avis a été rejeté et ne sera pas visible publiquement.",
+      variant: "destructive"
+    });
   };
 
-  const handleDelete = async (reviewId: number) => {
-    setLoading(true);
-    try {
-      await onDeleteReview(reviewId);
-      toast({ title: "Avis supprimé", description: "L'avis a été définitivement supprimé.", variant: "destructive" });
-    } catch {
-      toast({ title: "Erreur", description: "Impossible de supprimer l'avis.", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
+  const handleDelete = (reviewId: string) => {
+    onDeleteReview(reviewId);
+    toast({
+      title: "Avis supprimé",
+      description: "L'avis a été définitivement supprimé.",
+      variant: "destructive"
+    });
   };
 
   return (

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, User, Shield, LogOut, LogIn } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -15,6 +15,7 @@ const Navigation = () => {
     { label: "Attractions", href: "/attractions" },
     { label: "Expériences", href: "/experiences" },
     { label: "Hébergements", href: "/accommodations" },
+    { label: "Équipe", href: "/team" },
     { label: "Avis", href: "/reviews" },
     { label: "Contact", href: "/contact" }
   ];
@@ -27,13 +28,13 @@ const Navigation = () => {
   if (loading) return <p> chargement...</p>
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-white/10 backdrop-blur-md border-b border-white/20">
+    <nav className="fixed top-0 w-full z-50 bg-white/10 backdrop-blur-md border-b border-white/20 text-black">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-2">
             <Link to="/" className="font-display text-2xl font-bold text-white">
-              Ville<span className="font-script text-sunset-200">Voyage</span>
+              Idjwi<span className="font-script text-sunset-200">Evasion</span>
             </Link>
           </div>
 
@@ -75,9 +76,6 @@ const Navigation = () => {
                   </Button>
                 </Link>
               )}
-              <Button className="btn-cta">
-                Réserver
-              </Button>
             </div>
           </div>
 

@@ -7,8 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/AuthContext";
-import axios from "@/api/axios";
+import { useAuth } from "@/contexts/AuthContext";
+import { apiService } from '@/services/api';
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,7 +21,7 @@ const LoginForm = () => {
     password: "",
     confirmPassword: ""
   });
-  const { login, user } = useAuth();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +65,7 @@ const LoginForm = () => {
         }
       } else {
         try {
-          await axios.post('/auth/register', formData)
+          await apiService.post('/auth/register', formData)
           toast({
             title: "Inscription reussi",
             description: "Compte crée avec succès",
@@ -103,14 +103,13 @@ const LoginForm = () => {
     });
   };
 
-  // ...existing code...
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-card px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="font-display text-2xl text-ocean-900">
-            Ville<span className="font-script text-sunset-500">Voyage</span>
+            Idjwi<span className="font-script text-sunset-500">Evasion</span>
           </CardTitle>
           <CardDescription>
             Connectez-vous pour accéder à votre espace

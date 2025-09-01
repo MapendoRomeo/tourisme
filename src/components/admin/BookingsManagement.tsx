@@ -7,13 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Calendar, User, MapPin, Euro, CheckCircle, XCircle, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-interface BookingsManagementProps {
-  bookings: Booking[];
-  onUpdateBooking: (bookingId: number, status: 'confirmed' | 'cancelled') => Promise<void>;
-}
-
 interface Booking {
-  id: number;
+  id: string;
   user: string;
   email: string;
   experience: string;
@@ -25,41 +20,35 @@ interface Booking {
   createdAt: string;
 }
 
+interface BookingsManagementProps {
+  bookings: Booking[];
+  onUpdateBooking: (id: string, status: 'confirmed' | 'cancelled') => void;
+}
+
 const BookingsManagement = ({ bookings, onUpdateBooking }: BookingsManagementProps) => {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled' | 'completed'>('all');
-  // bookings sont passés en props, plus de chargement local ici
 
-  const handleConfirm = async (bookingId: number) => {
-    setLoading(true);
-    try {
-      await onUpdateBooking(bookingId, 'confirmed');
-      toast({ title: "Réservation confirmée", description: "La réservation a été confirmée." });
-    } catch {
-      toast({ title: "Erreur", description: "Impossible de confirmer la réservation.", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancel = async (bookingId: number) => {
-    setLoading(true);
-    try {
-      await onUpdateBooking(bookingId, 'cancelled');
-      toast({ title: "Réservation annulée", description: "La réservation a été annulée.", variant: "destructive" });
-    } catch {
-      toast({ title: "Erreur", description: "Impossible d'annuler la réservation.", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredBookings = filter === 'all'
-    ? bookings
+  const filteredBookings = filter === 'all' 
+    ? bookings 
     : bookings.filter(booking => booking.status === filter);
 
-  // Suppression des doublons et de setBookings, tout passe par le parent
+  const handleConfirm = (bookingId: string) => {
+    onUpdateBooking(bookingId, 'confirmed');
+    toast({
+      title: "Réservation confirmée",
+      description: "La réservation a été confirmée avec succès.",
+    });
+  };
+
+  const handleCancel = (bookingId: string) => {
+    onUpdateBooking(bookingId, 'cancelled');
+    toast({
+      title: "Réservation annulée",
+      description: "La réservation a été annulée.",
+      variant: "destructive"
+    });
+  };
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -68,7 +57,7 @@ const BookingsManagement = ({ bookings, onUpdateBooking }: BookingsManagementPro
       cancelled: { variant: "destructive" as const, text: "Annulée" },
       completed: { variant: "outline" as const, text: "Terminée" }
     };
-
+    
     const config = variants[status as keyof typeof variants];
     return <Badge variant={config.variant}>{config.text}</Badge>;
   };
@@ -89,7 +78,7 @@ const BookingsManagement = ({ bookings, onUpdateBooking }: BookingsManagementPro
         <CardDescription>
           Gérez les réservations d'expériences
         </CardDescription>
-
+        
         {/* Statistiques rapides */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
           <div className="text-center p-3 bg-ocean-50 rounded-lg">
@@ -113,7 +102,7 @@ const BookingsManagement = ({ bookings, onUpdateBooking }: BookingsManagementPro
             <div className="text-sm text-muted-foreground">Revenus</div>
           </div>
         </div>
-
+        
         {/* Filtres */}
         <div className="flex gap-2 mt-4 flex-wrap">
           {(['all', 'pending', 'confirmed', 'cancelled', 'completed'] as const).map((status) => (
@@ -123,10 +112,10 @@ const BookingsManagement = ({ bookings, onUpdateBooking }: BookingsManagementPro
               size="sm"
               onClick={() => setFilter(status)}
             >
-              {status === 'all' ? 'Toutes' :
-                status === 'pending' ? 'En attente' :
-                  status === 'confirmed' ? 'Confirmées' :
-                    status === 'cancelled' ? 'Annulées' : 'Terminées'}
+              {status === 'all' ? 'Toutes' : 
+               status === 'pending' ? 'En attente' :
+               status === 'confirmed' ? 'Confirmées' :
+               status === 'cancelled' ? 'Annulées' : 'Terminées'}
               <Badge variant="secondary" className="ml-1">
                 {status === 'all' ? bookings.length : bookings.filter(b => b.status === status).length}
               </Badge>
@@ -135,9 +124,7 @@ const BookingsManagement = ({ bookings, onUpdateBooking }: BookingsManagementPro
         </div>
       </CardHeader>
       <CardContent>
-        {loading ? (
-          <p className="text-center text-muted-foreground py-8">Chargement des réservations...</p>
-        ) : filteredBookings.length === 0 ? (
+        {filteredBookings.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">
             Aucune réservation trouvée pour ce filtre.
           </p>
@@ -195,15 +182,15 @@ const BookingsManagement = ({ bookings, onUpdateBooking }: BookingsManagementPro
                       <div className="flex gap-2">
                         {booking.status === 'pending' && (
                           <>
-                            <Button
-                              size="sm"
+                            <Button 
+                              size="sm" 
                               onClick={() => handleConfirm(booking.id)}
                               className="bg-nature-500 hover:bg-nature-600"
                             >
                               <CheckCircle className="w-4 h-4" />
                             </Button>
-                            <Button
-                              size="sm"
+                            <Button 
+                              size="sm" 
                               variant="destructive"
                               onClick={() => handleCancel(booking.id)}
                             >
