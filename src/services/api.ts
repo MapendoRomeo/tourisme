@@ -77,7 +77,7 @@ export interface AdminUser {
   role?: 'superAdmin' | 'admin' | 'user';
 }
 // Configuration de base pour axios
-export const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+export const BASE_URL = import.meta.env.API_BASE_URL;
 
 class ApiService {
   private api: AxiosInstance;
