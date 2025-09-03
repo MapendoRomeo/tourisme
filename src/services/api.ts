@@ -1,10 +1,28 @@
 
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
+export interface ContactMessage {
+  _id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+  date: string;
+  status: 'pending' | 'replied' | 'resolved' | 'spam';
+  priority: 'low' | 'medium' | 'high';
+}
+interface ContactMessagesResponse {
+  success: boolean;
+  data: ContactMessage[];
+}
 
 export interface AdminReview {
   id: string;
   user: string;
-  attraction: string;
+  attraction: {
+    id: string,
+    name: string,
+  };
   rating: number;
   title: string;
   comment: string;
@@ -59,7 +77,7 @@ export interface AdminUser {
   role?: 'superAdmin' | 'admin' | 'user';
 }
 // Configuration de base pour axios
-export const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://tourisme-khei.onrender.com/api';
+export const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 class ApiService {
   private api: AxiosInstance;
@@ -257,6 +275,23 @@ class ApiService {
   }
   async createBooking(booking: any) {
     return this.post('/bookings', booking);
+  }
+
+  // contacts
+  async getContacts() {
+    return this.get<ContactMessagesResponse>('/contacts/messages');
+  }
+
+  async createContact(contact: any) {
+    return this.post('/contacts/messages', contact);
+  }
+
+  async updateContact(id: string, contact: any) {
+    return this.put(`/contacts/${id}`, { data: contact });
+  }
+
+  async deleteContact(id: string) {
+    return this.delete(`/contacts/${id}`);
   }
   // Upload de fichiers
   async uploadFile(file: File, endpoint: string = '/images/upload') {

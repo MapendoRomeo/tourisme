@@ -337,7 +337,7 @@ const AttractionsManagement = ({
                     id="price"
                     value={formData.price}
                     onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                    placeholder="ex: Gratuit, 15€"
+                    placeholder="ex: Gratuit, 15$"
                   />
                 </div>
                 <div>

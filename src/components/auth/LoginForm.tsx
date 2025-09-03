@@ -109,7 +109,7 @@ const LoginForm = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="font-display text-2xl text-ocean-900">
-            Idjwi<span className="font-script text-sunset-500">Evasion</span>
+            Explorez<span className="font-script text-sunset-500">Idjwi</span>
           </CardTitle>
           <CardDescription>
             Connectez-vous pour accéder à votre espace

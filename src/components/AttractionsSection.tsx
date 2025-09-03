@@ -44,7 +44,7 @@ const AttractionsSection = () => {
             Attractions Incontournables
           </h2>
           <p className="section-subtitle">
-            Découvrez les joyaux qui font la renommée de Saint-Tropez
+            Découvrez les joyaux qui font la renommée de Idjwi
           </p>
         </div>
 

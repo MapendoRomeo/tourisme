@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Star, MapPin, Wifi, Car, Waves, Coffee, Search, Filter } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { apiService, BASE_URL } from '@/services/api';
+import Footer from '@/components/Footer';
 
 const AccommodationsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -85,9 +86,9 @@ const AccommodationsPage = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les prix</SelectItem>
-                  <SelectItem value="budget">Budget (≤ 100€)</SelectItem>
-                  <SelectItem value="mid">Moyen (100-300€)</SelectItem>
-                  <SelectItem value="luxury">Luxe (&gt; 300€)</SelectItem>
+                  <SelectItem value="budget">Budget (≤ 100$)</SelectItem>
+                  <SelectItem value="mid">Moyen (100-300$)</SelectItem>
+                  <SelectItem value="luxury">Luxe (&gt; 300$)</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -125,7 +126,7 @@ const AccommodationsPage = () => {
                   </Badge>
                   <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-2 py-1">
                     <span className="text-sm font-semibold text-ocean-600">
-                      {accommodation.price}€/nuit
+                      {accommodation.price}$/nuit
                     </span>
                   </div>
                 </div>
@@ -175,6 +176,7 @@ const AccommodationsPage = () => {
           )}
         </div>
       </section>
+      <Footer />
     </div>
   );
 };

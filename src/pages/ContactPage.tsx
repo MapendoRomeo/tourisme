@@ -11,6 +11,8 @@ import { ImageUpload } from '@/components/ui/image-upload';
 import { MapPin, Phone, Mail, Clock, Send, MessageSquare } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
+import Footer from '@/components/Footer';
+import {apiService} from '@/services/api';
 
 interface ContactFormData {
   name: string;
@@ -37,60 +39,38 @@ const ContactPage = () => {
     }
   });
 
-  const handleImageSelect = (file: File) => {
-    const newAttachments = [...attachments, file];
-    setAttachments(newAttachments);
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const newPreviews = [...attachmentPreviews, e.target?.result as string];
-      setAttachmentPreviews(newPreviews);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleImageRemove = (index: number) => {
-    const newAttachments = attachments.filter((_, i) => i !== index);
-    const newPreviews = attachmentPreviews.filter((_, i) => i !== index);
-    setAttachments(newAttachments);
-    setAttachmentPreviews(newPreviews);
-  };
-
   const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
-    
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    toast({
-      title: "Message envoyé avec succès !",
-      description: "Nous vous répondrons dans les plus brefs délais.",
-    });
-    
-    form.reset();
-    setAttachments([]);
-    setAttachmentPreviews([]);
-    setIsSubmitting(false);
+    try {
+      await apiService.createContact(data);
+      toast({
+        title: "Message envoyé avec succès !",
+        description: "Nous vous répondrons dans les plus brefs délais.",
+      });
+      form.reset();
+      setIsSubmitting(false);
+    } catch {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'envoyer le message",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+    }
   };
 
   const contactInfo = [
     {
       icon: <Phone className="w-6 h-6" />,
       title: "Téléphone",
-      info: "+33 4 94 97 45 21",
+      info: "+243 97 47 91 666",
       detail: "Lun-Ven 9h-18h, Sam 9h-12h"
     },
     {
       icon: <Mail className="w-6 h-6" />,
       title: "Email",
-      info: "info@villevoyage-sttropez.fr",
+      info: "basemehabajuwe3@gmail.com",
       detail: "Réponse sous 24h"
-    },
-    {
-      icon: <MapPin className="w-6 h-6" />,
-      title: "Adresse",
-      info: "12 Rue de la Ponche, 83990 Saint-Tropez",
-      detail: "Face au port de plaisance"
     },
     {
       icon: <Clock className="w-6 h-6" />,
@@ -103,7 +83,7 @@ const ContactPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      
+
       {/* Hero Section */}
       <section className="pt-20 pb-12 bg-gradient-hero text-white">
         <div className="container mx-auto px-4 text-center">
@@ -127,8 +107,8 @@ const ContactPage = () => {
                     Informations de Contact
                   </h2>
                   <p className="text-muted-foreground mb-8 leading-relaxed">
-                    Nous sommes là pour répondre à toutes vos questions et vous aider à planifier 
-                    votre séjour parfait à Saint-Tropez.
+                    Nous sommes là pour répondre à toutes vos questions et vous aider à planifier
+                    votre séjour parfait à Idjwi.
                   </p>
                 </div>
 
@@ -191,7 +171,7 @@ const ContactPage = () => {
                         <FormField
                           control={form.control}
                           name="email"
-                          rules={{ 
+                          rules={{
                             required: "L'email est requis",
                             pattern: {
                               value: /^\S+@\S+$/,
@@ -256,7 +236,7 @@ const ContactPage = () => {
                       <FormField
                         control={form.control}
                         name="message"
-                        rules={{ 
+                        rules={{
                           required: "Le message est requis",
                           minLength: {
                             value: 10,
@@ -267,7 +247,7 @@ const ContactPage = () => {
                           <FormItem>
                             <FormLabel>Message *</FormLabel>
                             <FormControl>
-                              <Textarea 
+                              <Textarea
                                 placeholder="Décrivez votre demande en détail..."
                                 rows={5}
                                 {...field}
@@ -278,40 +258,8 @@ const ContactPage = () => {
                         )}
                       />
 
-                      {/* Image Upload Section */}
-                      <div className="space-y-4">
-                        <FormLabel>Pièces jointes (optionnel)</FormLabel>
-                        <p className="text-sm text-muted-foreground">
-                          Vous pouvez joindre des images pour illustrer votre demande
-                        </p>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {attachmentPreviews.map((preview, index) => (
-                            <ImageUpload
-                              key={index}
-                              onImageSelect={() => {}}
-                              onImageRemove={() => handleImageRemove(index)}
-                              preview={preview}
-                            />
-                          ))}
-                          
-                          {attachments.length < 5 && (
-                            <ImageUpload
-                              onImageSelect={handleImageSelect}
-                              onImageRemove={() => {}}
-                            />
-                          )}
-                        </div>
-                        
-                        {attachments.length >= 5 && (
-                          <p className="text-sm text-muted-foreground">
-                            Maximum 5 images autorisées
-                          </p>
-                        )}
-                      </div>
-
-                      <Button 
-                        type="submit" 
+                      <Button
+                        type="submit"
                         className="w-full btn-cta text-lg py-3"
                         disabled={isSubmitting}
                       >
@@ -332,6 +280,7 @@ const ContactPage = () => {
           </div>
         </div>
       </section>
+      <Footer />
     </div>
   );
 };

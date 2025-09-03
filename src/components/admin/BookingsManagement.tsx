@@ -98,7 +98,7 @@ const BookingsManagement = ({ bookings, onUpdateBooking }: BookingsManagementPro
             <div className="text-sm text-muted-foreground">Confirmées</div>
           </div>
           <div className="text-center p-3 bg-sunset-50 rounded-lg">
-            <div className="text-2xl font-bold text-sunset-600">{getTotalRevenue()}€</div>
+            <div className="text-2xl font-bold text-sunset-600">{getTotalRevenue()}$</div>
             <div className="text-sm text-muted-foreground">Revenus</div>
           </div>
         </div>

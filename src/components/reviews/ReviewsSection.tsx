@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -10,7 +10,11 @@ import ReviewForm from "./ReviewForm";
 import { apiService } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 
-const ReviewsSection = () => {
+interface ReviewsSectionProps {
+  hideDiv?: boolean;
+}
+
+const ReviewsSection: React.FC<ReviewsSectionProps> = ({ hideDiv = false }) => {
   const [selectedAttraction, setSelectedAttraction] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
@@ -38,7 +42,7 @@ const ReviewsSection = () => {
   const approvedReviews = reviews.filter(review => review.status === 'approved');
   const filteredReviews = selectedAttraction === "all"
     ? approvedReviews
-    : approvedReviews.filter(review => review.attraction === selectedAttraction);
+    : approvedReviews.filter(review => review.attraction.id === selectedAttraction);
 
   const averageRating = approvedReviews.length > 0
     ? approvedReviews.reduce((acc, review) => acc + review.rating, 0) / approvedReviews.length
@@ -71,12 +75,12 @@ const ReviewsSection = () => {
   return (
     <section id="reviews" className="section-padding">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
+        {!hideDiv && (<div className="text-center mb-12">
           <h2 className="section-title text-ocean-900">
             Avis de nos visiteurs
           </h2>
           <p className="section-subtitle">
-            Découvrez ce que pensent les autres voyageurs de Saint-Tropez
+            Découvrez ce que pensent les autres voyageurs de Idjwi
           </p>
 
           <div className="flex items-center justify-center gap-4 mt-6">
@@ -95,7 +99,7 @@ const ReviewsSection = () => {
               ({approvedReviews.length} avis)
             </span>
           </div>
-        </div>
+        </div>)}
 
         {/* Filtres */}
         <div className="flex flex-wrap justify-center gap-2 mb-8">
@@ -153,7 +157,7 @@ const ReviewsSection = () => {
                         ))}
                       </div>
                       <span className="text-sm text-muted-foreground">
-                        {review.attraction}
+                        {review.attraction.name}
                       </span>
                     </div>
 

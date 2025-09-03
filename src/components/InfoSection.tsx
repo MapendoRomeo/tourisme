@@ -1,21 +1,17 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plane, MapPin, Phone, Mail, Clock, Info } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { ShipIcon, MapPin, Phone, Mail, Clock, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const InfoSection = () => {
-  const { toast } = useToast();
   const navigate = useNavigate();
-  const [isContacting, setIsContacting] = useState(false);
 
   const practicalInfo = [
     {
-      icon: <Plane className="w-6 h-6" />,
+      icon: <ShipIcon className="w-6 h-6" />,
       title: "Comment s'y rendre",
-      info: "Aéroport de Nice à 1h30, TGV jusqu'à Saint-Raphaël puis bus"
+      info: "Partez de Bukavu, Goma ou Kalehe, embarquez pour une traversée en pirogue motorisée vers l'ile d'Idjwi et admirez la beauté du lac Kivu en chemin"
     },
     {
       icon: <Clock className="w-6 h-6" />,

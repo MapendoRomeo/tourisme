@@ -9,7 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 interface Review {
   id: string;
   user: string;
-  attraction: string;
+  attraction: {
+    id: string,
+    name: string,
+  };
   rating: number;
   title: string;
   comment: string;
@@ -110,7 +113,7 @@ const ReviewsManagement = ({ reviews, onUpdateReview, onDeleteReview }: ReviewsM
                       />
                     ))}
                     <span className="text-sm text-muted-foreground ml-2">
-                      {review.attraction}
+                      {review.attraction.name}
                     </span>
                   </div>
                   <h6 className="font-medium mb-1">{review.title}</h6>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Mail, Linkedin, Twitter, Github, Phone } from "lucide-react";
 import { useEffect, useState } from "react";
 import { apiService, BASE_URL } from "@/services/api";
+import Footer from "@/components/Footer";
 
 const TeamPage = () => {
   const [teamMembers, setTeamMembers] = useState([])
@@ -22,18 +23,18 @@ const TeamPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sunset-50 to-ocean-50">
       <Navigation />
-
-      <div className="container mx-auto px-4 pt-24 pb-12">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-sunset-600 to-ocean-600 bg-clip-text text-transparent">
+      <div className="bg-gradient-to-r from-sunset-600 to-nature-500 text-white py-20">
+        <div className="container mx-auto px-4">
+          <h1 className="font-display text-4xl md:text-6xl font-bold mb-4">
             Notre Équipe
           </h1>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Rencontrez les passionnés qui font de VilleVoyage une expérience unique.
+          <p className="text-xl text-white/90 max-w-2xl">
+            Rencontrez les passionnés qui font de ExporezIdjwi une expérience unique.
             Notre équipe d'experts est là pour vous accompagner dans tous vos projets de voyage.
           </p>
         </div>
-
+      </div>
+      <div className="container mx-auto px-4 pt-24 pb-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {teamMembers.map((member) => (
             <Card key={member.id} className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
@@ -139,6 +140,7 @@ const TeamPage = () => {
           </Button>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

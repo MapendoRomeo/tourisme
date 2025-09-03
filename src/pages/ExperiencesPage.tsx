@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import QuickLoginModal from "@/components/auth/QuickLoginModal";
 import { apiService, BASE_URL } from "@/services/api";
+import Footer from "@/components/Footer";
 
 const ExperiencesPage = () => {
   const { toast } = useToast();
@@ -72,9 +73,9 @@ const ExperiencesPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-ocean-50 to-sunset-50">
         <Navigation />
 
-        <div className="pt-20">
+        <div className="">
           {/* Header */}
-          <div className="bg-gradient-to-r from-sunset-600 to-sunset-500 text-white py-16">
+          <div className="bg-gradient-to-r from-sunset-600 to-sunset-500 text-white py-20">
             <div className="container mx-auto px-4">
               <Link to="/" className="inline-flex items-center text-white/80 hover:text-white mb-6 transition-colors">
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -196,23 +197,7 @@ const ExperiencesPage = () => {
         </div>
 
         {/* Footer */}
-        <footer className="bg-ocean-900 text-white py-8 mt-16">
-          <div className="container mx-auto px-4 text-center">
-            <div className="mb-4">
-              <h3 className="font-display text-2xl font-bold">
-                Idwi<span className="font-script text-sunset-200">Evasion</span>
-              </h3>
-            </div>
-            <p className="text-white/70 mb-4">
-              Votre guide pour découvrir la magie de Idjwi
-            </p>
-            <div className="border-t border-white/20 pt-4">
-              <p className="text-sm text-white/50">
-                © 2024 VilleVoyage. Tous droits réservés.
-              </p>
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </div>
 
       <QuickLoginModal

@@ -229,7 +229,7 @@ const ExperiencesManagement = ({
                 </select>
               </div>
               <div>
-                <Label htmlFor="price">Prix (€) *</Label>
+                <Label htmlFor="price">Prix ($) *</Label>
                 <Input
                   id="price"
                   type="number"
@@ -340,7 +340,7 @@ const ExperiencesManagement = ({
                 <div>
                   <h5 className="font-medium">{experience.title}</h5>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
-                    <span className="font-semibold text-ocean-600">{experience.price}€</span>
+                    <span className="font-semibold text-ocean-600">{experience.price}$</span>
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
                       {experience.duration}

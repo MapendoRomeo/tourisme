@@ -227,7 +227,7 @@ const AccommodationsManagement = ({
                 </select>
               </div>
               <div>
-                <Label htmlFor="price">Prix par nuit (€) *</Label>
+                <Label htmlFor="price">Prix par nuit ($) *</Label>
                 <Input
                   id="price"
                   type="number"
@@ -300,7 +300,7 @@ const AccommodationsManagement = ({
                 <div className="flex-1">
                   <div className="flex items-start justify-between">
                     <h5 className="font-medium">{accommodation.name}</h5>
-                    <span className="font-bold text-primary">{accommodation.price}€/nuit</span>
+                    <span className="font-bold text-primary">{accommodation.price}$/nuit</span>
                   </div>
                   <p className="text-sm text-muted-foreground mb-1">{accommodation.location}</p>
                   <Badge variant="outline" className="text-xs mb-2">

@@ -1,4 +1,5 @@
 
+import Footer from "@/components/Footer";
 import Navigation from "@/components/Navigation";
 import ReviewsSection from "@/components/reviews/ReviewsSection";
 
@@ -6,28 +7,22 @@ const ReviewsPage = () => {
   return (
     <div className="min-h-screen">
       <Navigation />
-      <div className="pt-20">
-        <ReviewsSection />
-      </div>
-      
-      {/* Footer */}
-      <footer className="bg-ocean-900 text-white py-8">
-        <div className="container mx-auto px-4 text-center">
-          <div className="mb-4">
-            <h3 className="font-display text-2xl font-bold">
-              Ville<span className="font-script text-sunset-200">Voyage</span>
-            </h3>
-          </div>
-          <p className="text-white/70 mb-4">
-            Votre guide pour découvrir la magie de Saint-Tropez
-          </p>
-          <div className="border-t border-white/20 pt-4">
-            <p className="text-sm text-white/50">
-              © 2024 VilleVoyage. Tous droits réservés.
+      <div className="">
+        <div className="bg-gradient-to-r from-ocean-600 to-ocean-500 text-white py-20">
+          <div className="container mx-auto px-4">
+            <h1 className="font-display text-4xl md:text-6xl font-bold mb-4">
+              Avis de nos visiteurs
+            </h1>
+            <p className="text-xl text-white/90 max-w-2xl">
+              Découvrez ce que pensent les autres voyageurs de Idjwi
             </p>
           </div>
         </div>
-      </footer>
+        <ReviewsSection hideDiv={true} />
+      </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

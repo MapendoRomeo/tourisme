@@ -229,7 +229,7 @@ const ExperiencesSection = () => {
               />
             </div>
             <div className="font-semibold text-sunset-600">
-              Prix total : {selectedExperience ? bookingParticipants * selectedExperience.price : 0} €
+              Prix total : {selectedExperience ? bookingParticipants * selectedExperience.price : 0} $
             </div>
           </div>
           <DialogFooter>

@@ -34,7 +34,7 @@ const Navigation = () => {
           {/* Logo */}
           <div className="flex items-center space-x-2">
             <Link to="/" className="font-display text-2xl font-bold text-white">
-              Idjwi<span className="font-script text-sunset-200">Evasion</span>
+              Explorez<span className="font-script text-sunset-200">Idjwi</span>
             </Link>
           </div>
 

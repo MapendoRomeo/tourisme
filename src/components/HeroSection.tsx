@@ -32,13 +32,13 @@ const HeroSection = () => {
 
       <div className="hero-content">
         <h1 className="hero-title">
-          Découvrez la Magie de
+          Vivez l'expériences de
           <br />
-          <span className="font-script text-sunset-200">Idjwi</span>
+          <span className="font-script text-sunset-200">Explorez Idjwi</span>
         </h1>
 
         <p className="hero-subtitle">
-          Une destination où l'élégance méditerranéenne rencontre l'art de vivre
+          Des paysages à couper le souffle, une histoire fascinante et des visites mémorables
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4">

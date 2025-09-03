@@ -9,8 +9,9 @@ import ExperiencesManagement from "@/components/admin/ExperiencesManagement";
 import BookingsManagement from "@/components/admin/BookingsManagement";
 import ReviewsManagement from "@/components/admin/ReviewsManagement";
 import UsersManagement from "@/components/admin/UsersManagement";
+import ContactManagement from "@/components/admin/ContactManagement";
 import AdminMobileNav from "@/components/admin/AdminMobileNav";
-import { apiService, AdminReview, AdminUser, Attraction, Accommodation } from '@/services/api';
+import { apiService, AdminReview, AdminUser, Attraction, Accommodation, ContactMessage } from '@/services/api';
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "react-router-dom";
@@ -36,7 +37,6 @@ interface AdminBooking {
   createdAt: string;
 }
 
-
 const AdminDashboard = () => {
   const { toast } = useToast();
   const { user, loading } = useAuth();
@@ -49,12 +49,13 @@ const AdminDashboard = () => {
   const [attractions, setAttractions] = useState<Attraction[]>([]);
   const [teamMembers, setTeamMembers] = useState<any[]>([[]]);
   const [bookings, setBookings] = useState<any[]>([]);
+  const [contactMessages, setContactMessages] = useState<ContactMessage[]>();
   const [autoApproveReviews, setAutoApproveReviews] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [reviewsData, userData, attractionData, experienceData, accommodationData, teamMembersData, bookingsData, autoApproveData] = await Promise.all([
+        const [reviewsData, userData, attractionData, experienceData, accommodationData, teamMembersData, bookingsData, autoApproveData, contactData] = await Promise.all([
           apiService.getReviews(),
           apiService.getUsers(),
           apiService.getAttractions(),
@@ -62,7 +63,8 @@ const AdminDashboard = () => {
           apiService.getAccommodations(),
           apiService.getTemMembers(),
           apiService.getBookings(),
-          apiService.getAutoApprove()
+          apiService.getAutoApprove(),
+          apiService.getContacts(),
         ]);
         setReviews(reviewsData);
         setUsers(userData);
@@ -72,6 +74,7 @@ const AdminDashboard = () => {
         setTeamMembers(teamMembersData);
         setBookings(bookingsData);
         setAutoApproveReviews(autoApproveData.autoApproveReviews)
+        setContactMessages(contactData.success ? contactData.data : []);
       } catch {
         toast({ title: "Erreur", description: "Impossible de charger les données administrateur.", variant: "destructive" });
       }
@@ -80,6 +83,19 @@ const AdminDashboard = () => {
   }, []);
 
 
+
+  function getLastMonthRevenue(bookings) {
+    const now = new Date();
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const monthKey = lastMonth.toISOString().slice(0, 7);
+    let total = 0;
+    bookings.forEach(b => {
+      if (b.status == 'confirmed' && b.date.startsWith(monthKey)) {
+        total += b.price;
+      }
+    });
+    return total;
+  }
   const toggleAutoApprove = async () => {
     setAutoApproveReviews(!autoApproveReviews)
     try {
@@ -261,6 +277,49 @@ const AdminDashboard = () => {
       toast({ title: "Erreur", description: "Impossible de supprimer l'utilisateur", variant: "destructive" });
     }
   };
+
+  const handleUpdateStatus = async (id: string, status: ContactMessage['status']) => {
+    try {
+      await apiService.patch(`/contacts/messages/${id}/status`, { status });
+      toast({
+        title: "Statut mis à jour",
+        description: `Le message a été marqué comme ${status}`,
+      });
+      // Optionnel : recharge les messages ou mets à jour localement
+    } catch {
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSendReply = async (messageId: string, replyText: string) => {
+    if (!replyText.trim()) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez saisir une réponse",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      await apiService.post(`/contacts/messages/${messageId}/reply`, { replyText: replyText });
+      await handleUpdateStatus(messageId, 'replied');
+      toast({
+        title: "Réponse envoyée",
+        description: "Votre réponse a été envoyée avec succès",
+      });
+      // Optionnel : recharge les messages ou mets à jour localement
+    } catch {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'envoyer la réponse",
+        variant: "destructive",
+      });
+    }
+  };
   if (loading) <p className="">chargement des données...</p>
   if (!user?.isAdmin && !user?.isSuperAdmin) {
     return (
@@ -268,6 +327,13 @@ const AdminDashboard = () => {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-2">Accès refusé</h1>
           <p className="text-gray-600">Vous n'avez pas les permissions pour accéder à cette page.</p>
+          <Link
+            to="/"
+            className="inline-flex items-center px-4 py-2 rounded-lg bg-ocean-500 text-white hover:bg-ocean-600 transition-colors"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Retour à l'accueil
+          </Link>
         </div>
       </div>
     );
@@ -296,7 +362,7 @@ const AdminDashboard = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         {/* Navigation desktop - cachée sur mobile */}
-        <TabsList className="hidden md:grid w-full grid-cols-8">
+        <TabsList className="hidden md:grid w-full grid-cols-9">
           <TabsTrigger value="stats">Statistiques</TabsTrigger>
           <TabsTrigger value="users">Utilisateurs</TabsTrigger>
           <TabsTrigger value="attractions">Attractions</TabsTrigger>
@@ -304,6 +370,7 @@ const AdminDashboard = () => {
           <TabsTrigger value="accommodations">Hébergements</TabsTrigger>
           <TabsTrigger value="team">Équipe</TabsTrigger>
           <TabsTrigger value="bookings">Réservations</TabsTrigger>
+          <TabsTrigger value="contacts">Contacts</TabsTrigger>
           <TabsTrigger value="reviews">Avis</TabsTrigger>
         </TabsList>
 
@@ -314,7 +381,7 @@ const AdminDashboard = () => {
                 <CardTitle>Total des utilisateurs</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.users}</div>
+                <div className="text-2xl font-bold">{users.length}</div>
               </CardContent>
             </Card>
             <Card>
@@ -322,7 +389,7 @@ const AdminDashboard = () => {
                 <CardTitle>Total des réservations</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.bookings}</div>
+                <div className="text-2xl font-bold">{bookings.length}</div>
               </CardContent>
             </Card>
             <Card>
@@ -330,7 +397,7 @@ const AdminDashboard = () => {
                 <CardTitle>Revenu mensuel</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.monthlyRevenue}€</div>
+                <div className="text-2xl font-bold">{getLastMonthRevenue(bookings)} $</div>
               </CardContent>
             </Card>
           </div>
@@ -403,6 +470,13 @@ const AdminDashboard = () => {
           <BookingsManagement
             bookings={bookings}
             onUpdateBooking={handleUpdateBooking}
+          />
+        </TabsContent>
+        <TabsContent value="contacts">
+          <ContactManagement
+            messages={contactMessages}
+            onUpdateMessage={handleUpdateStatus}
+            onSendReply={handleSendReply}
           />
         </TabsContent>
 

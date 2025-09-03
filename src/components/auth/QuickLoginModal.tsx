@@ -16,10 +16,10 @@ interface QuickLoginModalProps {
   description?: string;
 }
 
-const QuickLoginModal = ({ 
-  isOpen, 
-  onClose, 
-  onSuccess, 
+const QuickLoginModal = ({
+  isOpen,
+  onClose,
+  onSuccess,
   title = "Connexion requise",
   description = "Veuillez vous connecter pour continuer"
 }: QuickLoginModalProps) => {
@@ -29,7 +29,7 @@ const QuickLoginModal = ({
     email: "",
     password: ""
   });
-  
+
   const { login } = useAuth();
   const { toast } = useToast();
 
@@ -39,7 +39,7 @@ const QuickLoginModal = ({
 
     try {
       const success = await login(formData.email, formData.password);
-      
+
       if (success) {
         toast({
           title: "Connexion réussie",
@@ -72,13 +72,6 @@ const QuickLoginModal = ({
     });
   };
 
-  const fillDemoCredentials = () => {
-    setFormData({
-      email: "demo@villevoyage.com",
-      password: "demo123"
-    });
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -86,7 +79,7 @@ const QuickLoginModal = ({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -105,7 +98,7 @@ const QuickLoginModal = ({
               />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="password">Mot de passe</Label>
             <div className="relative">
@@ -133,20 +126,10 @@ const QuickLoginModal = ({
               </Button>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Button type="submit" className="w-full btn-cta" disabled={isLoading}>
               {isLoading ? "Connexion..." : "Se connecter"}
-            </Button>
-            
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="w-full" 
-              onClick={fillDemoCredentials}
-              disabled={isLoading}
-            >
-              Utiliser le compte démo
             </Button>
           </div>
         </form>
