@@ -1,4 +1,4 @@
-import { Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
 
 const navItems = [
     { label: "Accueil", href: "/" },
@@ -60,9 +60,9 @@ export default function Footer() {
                 {/* Contact */}
                 <div>
                     <h4 className="text-lg font-semibold mb-3">Contact</h4>
-                    <p className="text-white/70 text-sm">info@villevoyage.com</p>
-                    <p className="text-white/70 text-sm">+243 123 456 789</p>
-                    <p className="text-white/70 text-sm">Goma, RDC</p>
+                    <p className="flex gap-1 text-white/70 text-sm"><Mail size={18} />basemehabajuwe3@gmail.com</p>
+                    <p className="flex gap-1 text-white/70 text-sm"><Phone size={18} />+243 97 47 91 666</p>
+                    <p className="flex gap-1 text-white/70 text-sm"><MapPin size={18} />Idjwi, Sud-Kivu, RDC</p>
                 </div>
 
                 {/* Réseaux sociaux */}

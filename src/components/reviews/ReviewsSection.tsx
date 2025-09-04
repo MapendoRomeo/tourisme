@@ -58,18 +58,22 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ hideDiv = false }) => {
 
   };
 
-  const handleLike = (reviewId: number) => {
-    setReviews(prev =>
-      prev.map(review =>
-        review.id === reviewId
-          ? { ...review, likes: review.likes + 1 }
-          : review
-      )
-    );
-    toast({
-      title: "Merci !",
-      description: "Votre like a été pris en compte.",
-    });
+  const handleLike = async (reviewId: number) => {
+    try {
+      await apiService.post(`/reviews/${reviewId}/like`);
+      // Mettre à jour le nombre de likes localement
+      await apiService.getReviews().then((data) => setReviews(data));
+      toast({
+        title: "Merci !",
+        description: "Votre like a été pris en compte.",
+      });
+    } catch {
+      toast({
+        title: "Erreur",
+        description: "Impossible de prendre en compte votre like.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (

@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sailboat, Camera, Wine, Utensils, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -148,7 +148,7 @@ const ExperiencesSection = () => {
                       <div className="flex items-center mb-4">
                         <div className="text-ocean-500 mr-3">
                           {/* Si tu as une icône dans l'API, sinon retire */}
-                          {experience.icon || <Sailboat className="w-8 h-8" />}
+                          {experience.icon}
                         </div>
                         <h3 className="font-display text-xl font-semibold text-ocean-900">
                           {experience.title}
@@ -166,7 +166,7 @@ const ExperiencesSection = () => {
                           Durée: {experience.duration}
                         </div>
                         <div className="font-semibold text-sunset-600">
-                          {experience.price}
+                          {experience.price} $
                         </div>
                       </div>
 

@@ -34,7 +34,7 @@ const HeroSection = () => {
         <h1 className="hero-title">
           Vivez l'expériences de
           <br />
-          <span className="font-script text-sunset-200">Explorez Idjwi</span>
+          <span className="font-script text-sunset-200">ExplorezIdjwi</span>
         </h1>
 
         <p className="hero-subtitle">
