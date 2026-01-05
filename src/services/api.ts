@@ -77,7 +77,7 @@ export interface AdminUser {
   role?: 'superAdmin' | 'admin' | 'user';
 }
 // Configuration de base pour axios
-export const BASE_URL = import.meta.env.VITE_API_BASE_URL
+export const BASE_URL = (import.meta as unknown as { env: { VITE_API_BASE_URL?: string } }).env.VITE_API_BASE_URL ?? ''
 
 class ApiService {
   private api: AxiosInstance;
@@ -194,21 +194,21 @@ class ApiService {
     return this.delete(`/accommodations/${id}`);
   }
 
-  // temMembers
+  // teamMembers
   async getTemMembers() {
-    return this.get<any[]>('/temMembers');
+    return this.get<any[]>('/teamMembers');
   }
 
   async createTemMember(temMember: any) {
-    return this.post('/temMembers', temMember);
+    return this.post('/teamMembers', temMember);
   }
 
   async updateTemMember(id: string, temMember: any) {
-    return this.put(`/temMembers/${id}`, { data: temMember });
+    return this.put(`/teamMembers/${id}`, { data: temMember });
   }
 
   async deleteTemMember(id: string) {
-    return this.delete(`/temMembers/${id}`);
+    return this.delete(`/teamMembers/${id}`);
   }
 
   // Expériences
